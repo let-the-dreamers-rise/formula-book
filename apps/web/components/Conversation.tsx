@@ -1,0 +1,78 @@
+"use client";
+
+import { useState } from "react";
+import { SUGGESTIONS } from "@/lib/config";
+import type { SimState } from "@/lib/sim-state";
+
+export function Conversation(props: { state: SimState; onSend: (text: string) => void }) {
+  const { state } = props;
+  const [draft, setDraft] = useState("");
+  const submit = () => {
+    props.onSend(draft);
+    setDraft("");
+  };
+  return (
+    <div className="rounded-lg border border-black/10 bg-white p-4">
+      {state.turns.length === 0 ? (
+        <div data-testid="empty-state">
+          <p className="text-black/70">Say a client&apos;s name, or try one of these:</p>
+          <div className="mt-2 flex flex-col gap-2">
+            {SUGGESTIONS.map((text, i) => (
+              <button
+                key={text}
+                data-testid={`suggestion-${i}`}
+                className="min-h-11 rounded border border-black/15 px-3 text-left"
+                onClick={() => props.onSend(text)}
+              >
+                {text}
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <ol className="flex max-h-72 flex-col gap-2 overflow-y-auto">
+          {state.turns.map((turn, i) => (
+            <li
+              key={i}
+              data-testid={turn.role === "user" ? "turn-user" : "turn-assistant"}
+              className={turn.role === "user" ? "self-end rounded bg-[var(--lcd)] px-3 py-2" : "rounded bg-[var(--paper)] px-3 py-2"}
+            >
+              {turn.text}
+            </li>
+          ))}
+        </ol>
+      )}
+      <p data-testid="spoken-reply" aria-live="polite" className="mt-3 min-h-6 text-base">
+        {state.spoken}
+      </p>
+      <form
+        className="mt-3 flex gap-2"
+        onSubmit={(e) => {
+          e.preventDefault();
+          submit();
+        }}
+      >
+        <label className="sr-only" htmlFor="utterance">
+          What the colourist says
+        </label>
+        <input
+          id="utterance"
+          data-testid="utterance-input"
+          className="min-h-11 flex-1 rounded border border-black/20 px-3"
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          placeholder="Lena's last formula"
+          autoComplete="off"
+        />
+        <button
+          data-testid="utterance-send"
+          type="submit"
+          disabled={state.busy || state.status !== "connected"}
+          className="min-h-11 rounded bg-[var(--copper)] px-4 text-white disabled:opacity-50"
+        >
+          Send
+        </button>
+      </form>
+    </div>
+  );
+}

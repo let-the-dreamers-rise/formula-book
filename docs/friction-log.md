@@ -29,7 +29,7 @@ Each entry: task, steps, expected, actual, severity, workaround, suggestion. Wri
 - Expected: responses arrive as the server wrote them.
 - Actual: with Norton running, (a) any response on a path containing "mcp" gets a `transfer-encoding: chunked` header injected while the body stays unchunked, so every HTTP client rejects it; (b) on another path, `tools/list` responses still arrive de-chunked under a chunked header, and fixed-length JSON errors to requests carrying `Mcp-Session-Id` are corrupted the same way. `tools/call` responses pass. The server writes valid responses (checked with `res._header`); the same calls work over an in-memory transport.
 - Severity: high on this machine. Every MCP client, Chrome included, fails `tools/list`.
-- Workaround: `MCP_PATH` setting (default `/mcp`), chunked JSON error bodies, and `tools/list` tested in memory. The browser path needs the security software to leave loopback traffic alone.
+- Workaround: `MCP_PATH` setting (default `/mcp`), chunked JSON error bodies, and `tools/list` tested in memory. In Chrome the sim's `tools/list` fails with `ERR_INVALID_CHUNKED_ENCODING`; the sim waits 8 seconds, shows a visible warning and carries on with the three known tools, so the golden path still runs. The browser path is only fully clean once the security software leaves loopback traffic alone.
 - Suggestion (for MCP builders): if a local MCP server fails with `HPE_INVALID_CHUNK_SIZE` or `ERR_INVALID_CHUNKED_ENCODING`, check for security software that inspects loopback HTTP before debugging the server.
 
 ## 3. MCP Apps package and SDK majors (21 Oct 2026)

@@ -1,0 +1,35 @@
+@import "tailwindcss";
+
+:root {
+  --paper: #f6f1ea;
+  --ink: #1e1b1a;
+  --lcd: #d5e0cf;
+  --copper: #a34a25;
+  --developer: #2f6f6a;
+  --refuse: #b3261e;
+  --ease-settle: cubic-bezier(0.2, 0, 0, 1);
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+
+:focus-visible {
+  outline: 2px solid var(--copper);
+  outline-offset: 2px;
+}
+
+pre,
+code {
+  font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition-duration: 0ms !important;
+    animation-duration: 0ms !important;
+  }
+}
