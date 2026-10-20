@@ -1,0 +1,9 @@
+{
+  "name": "@formula-book/core",
+  "version": "0.1.0",
+  "description": "Hair colour formula maths, speech normalising and client matching. No dependencies.",
+  "license": "MIT",
+  "type": "module",
+  "exports": { ".": "./src/index.ts" },
+  "main": "./src/index.ts"
+}
