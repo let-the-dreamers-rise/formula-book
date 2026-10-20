@@ -22,6 +22,16 @@ Each entry: task, steps, expected, actual, severity, workaround, suggestion. Wri
 - Workaround: the server accepts 2025-03-26 and 2025-11-25, always sends `structuredContent`, and sends `elicitation/create` only when the session is 2025-06-18 or later and the client declared `elicitation`. Otherwise it returns a `needs_choice` result.
 - Suggestion: state the minimum protocol version for each tool-result feature, and whether Alexa+ declares `elicitation`.
 
+## 4. Security software rewrites local MCP traffic (21 Oct 2026)
+
+- Task: run the server's integration tests and the browser sim against `http://127.0.0.1`.
+- Steps: start the server, send `initialize`, `tools/list` and `tools/call` with curl and with Node fetch.
+- Expected: responses arrive as the server wrote them.
+- Actual: with Norton running, (a) any response on a path containing "mcp" gets a `transfer-encoding: chunked` header injected while the body stays unchunked, so every HTTP client rejects it; (b) on another path, `tools/list` responses still arrive de-chunked under a chunked header, and fixed-length JSON errors to requests carrying `Mcp-Session-Id` are corrupted the same way. `tools/call` responses pass. The server writes valid responses (checked with `res._header`); the same calls work over an in-memory transport.
+- Severity: high on this machine. Every MCP client, Chrome included, fails `tools/list`.
+- Workaround: `MCP_PATH` setting (default `/mcp`), chunked JSON error bodies, and `tools/list` tested in memory. The browser path needs the security software to leave loopback traffic alone.
+- Suggestion (for MCP builders): if a local MCP server fails with `HPE_INVALID_CHUNK_SIZE` or `ERR_INVALID_CHUNKED_ENCODING`, check for security software that inspects loopback HTTP before debugging the server.
+
 ## 3. MCP Apps package and SDK majors (21 Oct 2026)
 
 - Task: add the MCP Apps card with `@modelcontextprotocol/ext-apps`.

@@ -1,0 +1,914 @@
+{
+  "id": "booth12",
+  "name": "Booth 12 (capped)",
+  "demo": true,
+  "clients": [
+    "Demo Client A",
+    "Demo Client B",
+    "Demo Client C",
+    "Demo Client D",
+    "Demo Client E"
+  ],
+  "formulas": [
+    {
+      "id": "booth12-1",
+      "client": "Demo Client A",
+      "savedAt": "2026-08-01T09:00:00Z",
+      "components": [
+        {
+          "shade": "4N",
+          "grams": 20
+        },
+        {
+          "shade": "7N",
+          "grams": 10
+        }
+      ],
+      "developerVolume": 10,
+      "developerRatio": 1,
+      "processingMinutes": 30
+    },
+    {
+      "id": "booth12-2",
+      "client": "Demo Client B",
+      "savedAt": "2026-08-02T09:00:00Z",
+      "components": [
+        {
+          "shade": "5N",
+          "grams": 25
+        },
+        {
+          "shade": "6.3",
+          "grams": 15
+        }
+      ],
+      "developerVolume": 20,
+      "developerRatio": 1.5,
+      "processingMinutes": 35
+    },
+    {
+      "id": "booth12-3",
+      "client": "Demo Client C",
+      "savedAt": "2026-08-03T09:00:00Z",
+      "components": [
+        {
+          "shade": "6N",
+          "grams": 30
+        },
+        {
+          "shade": "7.1",
+          "grams": 20
+        }
+      ],
+      "developerVolume": 30,
+      "developerRatio": 1,
+      "processingMinutes": 40
+    },
+    {
+      "id": "booth12-4",
+      "client": "Demo Client D",
+      "savedAt": "2026-08-04T09:00:00Z",
+      "components": [
+        {
+          "shade": "7N",
+          "grams": 35
+        },
+        {
+          "shade": "8.1",
+          "grams": 10
+        }
+      ],
+      "developerVolume": 10,
+      "developerRatio": 1.5,
+      "processingMinutes": 30
+    },
+    {
+      "id": "booth12-5",
+      "client": "Demo Client E",
+      "savedAt": "2026-08-05T09:00:00Z",
+      "components": [
+        {
+          "shade": "6.3",
+          "grams": 20
+        },
+        {
+          "shade": "4N",
+          "grams": 15
+        }
+      ],
+      "developerVolume": 20,
+      "developerRatio": 1,
+      "processingMinutes": 35
+    },
+    {
+      "id": "booth12-6",
+      "client": "Demo Client A",
+      "savedAt": "2026-08-06T09:00:00Z",
+      "components": [
+        {
+          "shade": "7.1",
+          "grams": 25
+        },
+        {
+          "shade": "5N",
+          "grams": 20
+        }
+      ],
+      "developerVolume": 30,
+      "developerRatio": 1.5,
+      "processingMinutes": 40
+    },
+    {
+      "id": "booth12-7",
+      "client": "Demo Client B",
+      "savedAt": "2026-08-07T09:00:00Z",
+      "components": [
+        {
+          "shade": "8.1",
+          "grams": 30
+        },
+        {
+          "shade": "6N",
+          "grams": 10
+        }
+      ],
+      "developerVolume": 10,
+      "developerRatio": 1,
+      "processingMinutes": 30
+    },
+    {
+      "id": "booth12-8",
+      "client": "Demo Client C",
+      "savedAt": "2026-08-08T09:00:00Z",
+      "components": [
+        {
+          "shade": "4N",
+          "grams": 35
+        },
+        {
+          "shade": "7N",
+          "grams": 15
+        }
+      ],
+      "developerVolume": 20,
+      "developerRatio": 1.5,
+      "processingMinutes": 35
+    },
+    {
+      "id": "booth12-9",
+      "client": "Demo Client D",
+      "savedAt": "2026-08-09T09:00:00Z",
+      "components": [
+        {
+          "shade": "5N",
+          "grams": 20
+        },
+        {
+          "shade": "6.3",
+          "grams": 20
+        }
+      ],
+      "developerVolume": 30,
+      "developerRatio": 1,
+      "processingMinutes": 40
+    },
+    {
+      "id": "booth12-10",
+      "client": "Demo Client E",
+      "savedAt": "2026-08-10T09:00:00Z",
+      "components": [
+        {
+          "shade": "6N",
+          "grams": 25
+        },
+        {
+          "shade": "7.1",
+          "grams": 10
+        }
+      ],
+      "developerVolume": 10,
+      "developerRatio": 1.5,
+      "processingMinutes": 30
+    },
+    {
+      "id": "booth12-11",
+      "client": "Demo Client A",
+      "savedAt": "2026-08-11T09:00:00Z",
+      "components": [
+        {
+          "shade": "7N",
+          "grams": 30
+        },
+        {
+          "shade": "8.1",
+          "grams": 15
+        }
+      ],
+      "developerVolume": 20,
+      "developerRatio": 1,
+      "processingMinutes": 35
+    },
+    {
+      "id": "booth12-12",
+      "client": "Demo Client B",
+      "savedAt": "2026-08-12T09:00:00Z",
+      "components": [
+        {
+          "shade": "6.3",
+          "grams": 35
+        },
+        {
+          "shade": "4N",
+          "grams": 20
+        }
+      ],
+      "developerVolume": 30,
+      "developerRatio": 1.5,
+      "processingMinutes": 40
+    },
+    {
+      "id": "booth12-13",
+      "client": "Demo Client C",
+      "savedAt": "2026-08-13T09:00:00Z",
+      "components": [
+        {
+          "shade": "7.1",
+          "grams": 20
+        },
+        {
+          "shade": "5N",
+          "grams": 10
+        }
+      ],
+      "developerVolume": 10,
+      "developerRatio": 1,
+      "processingMinutes": 30
+    },
+    {
+      "id": "booth12-14",
+      "client": "Demo Client D",
+      "savedAt": "2026-08-14T09:00:00Z",
+      "components": [
+        {
+          "shade": "8.1",
+          "grams": 25
+        },
+        {
+          "shade": "6N",
+          "grams": 15
+        }
+      ],
+      "developerVolume": 20,
+      "developerRatio": 1.5,
+      "processingMinutes": 35
+    },
+    {
+      "id": "booth12-15",
+      "client": "Demo Client E",
+      "savedAt": "2026-08-15T09:00:00Z",
+      "components": [
+        {
+          "shade": "4N",
+          "grams": 30
+        },
+        {
+          "shade": "7N",
+          "grams": 20
+        }
+      ],
+      "developerVolume": 30,
+      "developerRatio": 1,
+      "processingMinutes": 40
+    },
+    {
+      "id": "booth12-16",
+      "client": "Demo Client A",
+      "savedAt": "2026-08-16T09:00:00Z",
+      "components": [
+        {
+          "shade": "5N",
+          "grams": 35
+        },
+        {
+          "shade": "6.3",
+          "grams": 10
+        }
+      ],
+      "developerVolume": 10,
+      "developerRatio": 1.5,
+      "processingMinutes": 30
+    },
+    {
+      "id": "booth12-17",
+      "client": "Demo Client B",
+      "savedAt": "2026-08-17T09:00:00Z",
+      "components": [
+        {
+          "shade": "6N",
+          "grams": 20
+        },
+        {
+          "shade": "7.1",
+          "grams": 15
+        }
+      ],
+      "developerVolume": 20,
+      "developerRatio": 1,
+      "processingMinutes": 35
+    },
+    {
+      "id": "booth12-18",
+      "client": "Demo Client C",
+      "savedAt": "2026-08-18T09:00:00Z",
+      "components": [
+        {
+          "shade": "7N",
+          "grams": 25
+        },
+        {
+          "shade": "8.1",
+          "grams": 20
+        }
+      ],
+      "developerVolume": 30,
+      "developerRatio": 1.5,
+      "processingMinutes": 40
+    },
+    {
+      "id": "booth12-19",
+      "client": "Demo Client D",
+      "savedAt": "2026-08-19T09:00:00Z",
+      "components": [
+        {
+          "shade": "6.3",
+          "grams": 30
+        },
+        {
+          "shade": "4N",
+          "grams": 10
+        }
+      ],
+      "developerVolume": 10,
+      "developerRatio": 1,
+      "processingMinutes": 30
+    },
+    {
+      "id": "booth12-20",
+      "client": "Demo Client E",
+      "savedAt": "2026-08-20T09:00:00Z",
+      "components": [
+        {
+          "shade": "7.1",
+          "grams": 35
+        },
+        {
+          "shade": "5N",
+          "grams": 15
+        }
+      ],
+      "developerVolume": 20,
+      "developerRatio": 1.5,
+      "processingMinutes": 35
+    },
+    {
+      "id": "booth12-21",
+      "client": "Demo Client A",
+      "savedAt": "2026-08-21T09:00:00Z",
+      "components": [
+        {
+          "shade": "8.1",
+          "grams": 20
+        },
+        {
+          "shade": "6N",
+          "grams": 20
+        }
+      ],
+      "developerVolume": 30,
+      "developerRatio": 1,
+      "processingMinutes": 40
+    },
+    {
+      "id": "booth12-22",
+      "client": "Demo Client B",
+      "savedAt": "2026-08-22T09:00:00Z",
+      "components": [
+        {
+          "shade": "4N",
+          "grams": 25
+        },
+        {
+          "shade": "7N",
+          "grams": 10
+        }
+      ],
+      "developerVolume": 10,
+      "developerRatio": 1.5,
+      "processingMinutes": 30
+    },
+    {
+      "id": "booth12-23",
+      "client": "Demo Client C",
+      "savedAt": "2026-08-23T09:00:00Z",
+      "components": [
+        {
+          "shade": "5N",
+          "grams": 30
+        },
+        {
+          "shade": "6.3",
+          "grams": 15
+        }
+      ],
+      "developerVolume": 20,
+      "developerRatio": 1,
+      "processingMinutes": 35
+    },
+    {
+      "id": "booth12-24",
+      "client": "Demo Client D",
+      "savedAt": "2026-08-24T09:00:00Z",
+      "components": [
+        {
+          "shade": "6N",
+          "grams": 35
+        },
+        {
+          "shade": "7.1",
+          "grams": 20
+        }
+      ],
+      "developerVolume": 30,
+      "developerRatio": 1.5,
+      "processingMinutes": 40
+    },
+    {
+      "id": "booth12-25",
+      "client": "Demo Client E",
+      "savedAt": "2026-08-25T09:00:00Z",
+      "components": [
+        {
+          "shade": "7N",
+          "grams": 20
+        },
+        {
+          "shade": "8.1",
+          "grams": 10
+        }
+      ],
+      "developerVolume": 10,
+      "developerRatio": 1,
+      "processingMinutes": 30
+    },
+    {
+      "id": "booth12-26",
+      "client": "Demo Client A",
+      "savedAt": "2026-08-26T09:00:00Z",
+      "components": [
+        {
+          "shade": "6.3",
+          "grams": 25
+        },
+        {
+          "shade": "4N",
+          "grams": 15
+        }
+      ],
+      "developerVolume": 20,
+      "developerRatio": 1.5,
+      "processingMinutes": 35
+    },
+    {
+      "id": "booth12-27",
+      "client": "Demo Client B",
+      "savedAt": "2026-08-27T09:00:00Z",
+      "components": [
+        {
+          "shade": "7.1",
+          "grams": 30
+        },
+        {
+          "shade": "5N",
+          "grams": 20
+        }
+      ],
+      "developerVolume": 30,
+      "developerRatio": 1,
+      "processingMinutes": 40
+    },
+    {
+      "id": "booth12-28",
+      "client": "Demo Client C",
+      "savedAt": "2026-08-28T09:00:00Z",
+      "components": [
+        {
+          "shade": "8.1",
+          "grams": 35
+        },
+        {
+          "shade": "6N",
+          "grams": 10
+        }
+      ],
+      "developerVolume": 10,
+      "developerRatio": 1.5,
+      "processingMinutes": 30
+    },
+    {
+      "id": "booth12-29",
+      "client": "Demo Client D",
+      "savedAt": "2026-09-01T09:00:00Z",
+      "components": [
+        {
+          "shade": "4N",
+          "grams": 20
+        },
+        {
+          "shade": "7N",
+          "grams": 15
+        }
+      ],
+      "developerVolume": 20,
+      "developerRatio": 1,
+      "processingMinutes": 35
+    },
+    {
+      "id": "booth12-30",
+      "client": "Demo Client E",
+      "savedAt": "2026-09-02T09:00:00Z",
+      "components": [
+        {
+          "shade": "5N",
+          "grams": 25
+        },
+        {
+          "shade": "6.3",
+          "grams": 20
+        }
+      ],
+      "developerVolume": 30,
+      "developerRatio": 1.5,
+      "processingMinutes": 40
+    },
+    {
+      "id": "booth12-31",
+      "client": "Demo Client A",
+      "savedAt": "2026-09-03T09:00:00Z",
+      "components": [
+        {
+          "shade": "6N",
+          "grams": 30
+        },
+        {
+          "shade": "7.1",
+          "grams": 10
+        }
+      ],
+      "developerVolume": 10,
+      "developerRatio": 1,
+      "processingMinutes": 30
+    },
+    {
+      "id": "booth12-32",
+      "client": "Demo Client B",
+      "savedAt": "2026-09-04T09:00:00Z",
+      "components": [
+        {
+          "shade": "7N",
+          "grams": 35
+        },
+        {
+          "shade": "8.1",
+          "grams": 15
+        }
+      ],
+      "developerVolume": 20,
+      "developerRatio": 1.5,
+      "processingMinutes": 35
+    },
+    {
+      "id": "booth12-33",
+      "client": "Demo Client C",
+      "savedAt": "2026-09-05T09:00:00Z",
+      "components": [
+        {
+          "shade": "6.3",
+          "grams": 20
+        },
+        {
+          "shade": "4N",
+          "grams": 20
+        }
+      ],
+      "developerVolume": 30,
+      "developerRatio": 1,
+      "processingMinutes": 40
+    },
+    {
+      "id": "booth12-34",
+      "client": "Demo Client D",
+      "savedAt": "2026-09-06T09:00:00Z",
+      "components": [
+        {
+          "shade": "7.1",
+          "grams": 25
+        },
+        {
+          "shade": "5N",
+          "grams": 10
+        }
+      ],
+      "developerVolume": 10,
+      "developerRatio": 1.5,
+      "processingMinutes": 30
+    },
+    {
+      "id": "booth12-35",
+      "client": "Demo Client E",
+      "savedAt": "2026-09-07T09:00:00Z",
+      "components": [
+        {
+          "shade": "8.1",
+          "grams": 30
+        },
+        {
+          "shade": "6N",
+          "grams": 15
+        }
+      ],
+      "developerVolume": 20,
+      "developerRatio": 1,
+      "processingMinutes": 35
+    },
+    {
+      "id": "booth12-36",
+      "client": "Demo Client A",
+      "savedAt": "2026-09-08T09:00:00Z",
+      "components": [
+        {
+          "shade": "4N",
+          "grams": 35
+        },
+        {
+          "shade": "7N",
+          "grams": 20
+        }
+      ],
+      "developerVolume": 30,
+      "developerRatio": 1.5,
+      "processingMinutes": 40
+    },
+    {
+      "id": "booth12-37",
+      "client": "Demo Client B",
+      "savedAt": "2026-09-09T09:00:00Z",
+      "components": [
+        {
+          "shade": "5N",
+          "grams": 20
+        },
+        {
+          "shade": "6.3",
+          "grams": 10
+        }
+      ],
+      "developerVolume": 10,
+      "developerRatio": 1,
+      "processingMinutes": 30
+    },
+    {
+      "id": "booth12-38",
+      "client": "Demo Client C",
+      "savedAt": "2026-09-10T09:00:00Z",
+      "components": [
+        {
+          "shade": "6N",
+          "grams": 25
+        },
+        {
+          "shade": "7.1",
+          "grams": 15
+        }
+      ],
+      "developerVolume": 20,
+      "developerRatio": 1.5,
+      "processingMinutes": 35
+    },
+    {
+      "id": "booth12-39",
+      "client": "Demo Client D",
+      "savedAt": "2026-09-11T09:00:00Z",
+      "components": [
+        {
+          "shade": "7N",
+          "grams": 30
+        },
+        {
+          "shade": "8.1",
+          "grams": 20
+        }
+      ],
+      "developerVolume": 30,
+      "developerRatio": 1,
+      "processingMinutes": 40
+    },
+    {
+      "id": "booth12-40",
+      "client": "Demo Client E",
+      "savedAt": "2026-09-12T09:00:00Z",
+      "components": [
+        {
+          "shade": "6.3",
+          "grams": 35
+        },
+        {
+          "shade": "4N",
+          "grams": 10
+        }
+      ],
+      "developerVolume": 10,
+      "developerRatio": 1.5,
+      "processingMinutes": 30
+    },
+    {
+      "id": "booth12-41",
+      "client": "Demo Client A",
+      "savedAt": "2026-09-13T09:00:00Z",
+      "components": [
+        {
+          "shade": "7.1",
+          "grams": 20
+        },
+        {
+          "shade": "5N",
+          "grams": 15
+        }
+      ],
+      "developerVolume": 20,
+      "developerRatio": 1,
+      "processingMinutes": 35
+    },
+    {
+      "id": "booth12-42",
+      "client": "Demo Client B",
+      "savedAt": "2026-09-14T09:00:00Z",
+      "components": [
+        {
+          "shade": "8.1",
+          "grams": 25
+        },
+        {
+          "shade": "6N",
+          "grams": 20
+        }
+      ],
+      "developerVolume": 30,
+      "developerRatio": 1.5,
+      "processingMinutes": 40
+    },
+    {
+      "id": "booth12-43",
+      "client": "Demo Client C",
+      "savedAt": "2026-09-15T09:00:00Z",
+      "components": [
+        {
+          "shade": "4N",
+          "grams": 30
+        },
+        {
+          "shade": "7N",
+          "grams": 10
+        }
+      ],
+      "developerVolume": 10,
+      "developerRatio": 1,
+      "processingMinutes": 30
+    },
+    {
+      "id": "booth12-44",
+      "client": "Demo Client D",
+      "savedAt": "2026-09-16T09:00:00Z",
+      "components": [
+        {
+          "shade": "5N",
+          "grams": 35
+        },
+        {
+          "shade": "6.3",
+          "grams": 15
+        }
+      ],
+      "developerVolume": 20,
+      "developerRatio": 1.5,
+      "processingMinutes": 35
+    },
+    {
+      "id": "booth12-45",
+      "client": "Demo Client E",
+      "savedAt": "2026-09-17T09:00:00Z",
+      "components": [
+        {
+          "shade": "6N",
+          "grams": 20
+        },
+        {
+          "shade": "7.1",
+          "grams": 20
+        }
+      ],
+      "developerVolume": 30,
+      "developerRatio": 1,
+      "processingMinutes": 40
+    },
+    {
+      "id": "booth12-46",
+      "client": "Demo Client A",
+      "savedAt": "2026-09-18T09:00:00Z",
+      "components": [
+        {
+          "shade": "7N",
+          "grams": 25
+        },
+        {
+          "shade": "8.1",
+          "grams": 10
+        }
+      ],
+      "developerVolume": 10,
+      "developerRatio": 1.5,
+      "processingMinutes": 30
+    },
+    {
+      "id": "booth12-47",
+      "client": "Demo Client B",
+      "savedAt": "2026-09-19T09:00:00Z",
+      "components": [
+        {
+          "shade": "6.3",
+          "grams": 30
+        },
+        {
+          "shade": "4N",
+          "grams": 15
+        }
+      ],
+      "developerVolume": 20,
+      "developerRatio": 1,
+      "processingMinutes": 35
+    },
+    {
+      "id": "booth12-48",
+      "client": "Demo Client C",
+      "savedAt": "2026-09-20T09:00:00Z",
+      "components": [
+        {
+          "shade": "7.1",
+          "grams": 35
+        },
+        {
+          "shade": "5N",
+          "grams": 20
+        }
+      ],
+      "developerVolume": 30,
+      "developerRatio": 1.5,
+      "processingMinutes": 40
+    },
+    {
+      "id": "booth12-49",
+      "client": "Demo Client D",
+      "savedAt": "2026-09-21T09:00:00Z",
+      "components": [
+        {
+          "shade": "8.1",
+          "grams": 20
+        },
+        {
+          "shade": "6N",
+          "grams": 10
+        }
+      ],
+      "developerVolume": 10,
+      "developerRatio": 1,
+      "processingMinutes": 30
+    },
+    {
+      "id": "booth12-50",
+      "client": "Demo Client E",
+      "savedAt": "2026-09-22T09:00:00Z",
+      "components": [
+        {
+          "shade": "4N",
+          "grams": 25
+        },
+        {
+          "shade": "7N",
+          "grams": 15
+        }
+      ],
+      "developerVolume": 20,
+      "developerRatio": 1.5,
+      "processingMinutes": 35
+    }
+  ]
+}

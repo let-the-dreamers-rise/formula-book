@@ -1,0 +1,36 @@
+{
+  "id": "demo-salon",
+  "name": "Demo Salon",
+  "demo": true,
+  "clients": ["Lena Okafor", "Priya Shah", "Priya Kapoor"],
+  "formulas": [
+    {
+      "id": "demo-1",
+      "client": "Priya Kapoor",
+      "savedAt": "2026-08-12T10:30:00Z",
+      "components": [{ "shade": "4N", "grams": 50 }],
+      "developerVolume": 20,
+      "developerRatio": 1,
+      "processingMinutes": 40
+    },
+    {
+      "id": "demo-2",
+      "client": "Priya Shah",
+      "savedAt": "2026-08-20T14:00:00Z",
+      "components": [{ "shade": "7N", "grams": 35 }, { "shade": "8.1", "grams": 15 }],
+      "developerVolume": 20,
+      "developerRatio": 1.5,
+      "processingMinutes": 30
+    },
+    {
+      "id": "demo-3",
+      "client": "Lena Okafor",
+      "savedAt": "2026-09-02T11:15:00Z",
+      "components": [{ "shade": "5N", "grams": 40 }, { "shade": "6.3", "grams": 10 }],
+      "developerVolume": 20,
+      "developerRatio": 1,
+      "processingMinutes": 35,
+      "note": "root touch-up"
+    }
+  ]
+}
