@@ -27,6 +27,19 @@ code {
   font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
 }
 
+.waveform-busy .waveform-bar {
+  animation: waveform 900ms var(--ease-settle) infinite alternate;
+}
+
+@keyframes waveform {
+  from {
+    opacity: 0.35;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   * {
     transition-duration: 0ms !important;

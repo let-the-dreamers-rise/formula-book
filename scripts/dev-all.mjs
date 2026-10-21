@@ -1,5 +1,5 @@
 // Starts the MCP server and the web app together. Ctrl+C stops both.
-// MCP_PATH defaults to /mcp; set it (for example to /rpc) where local security software rewrites /mcp traffic.
+// MCP_PATH defaults to /mcp.
 import { spawn } from "node:child_process";
 
 const port = process.env.MCP_PORT || "8787";

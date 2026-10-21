@@ -3,12 +3,14 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import type { ElicitResult } from "@modelcontextprotocol/sdk/types.js";
 import { MCP_URL, SALONS } from "@/lib/config";
+import { cardUri, invokingText } from "@/lib/devices";
 import { interpretResult, type Interpreted } from "@/lib/interpret";
 import { parseUtterance } from "@/lib/rule-parser";
 import { openSession, type LiveSession } from "@/lib/session";
 import { initialState, reduce } from "@/lib/sim-state";
 import { ChoiceDialog } from "./ChoiceDialog";
 import { Conversation } from "./Conversation";
+import { DeviceStage } from "./DeviceStage";
 import { ResultJson } from "./ResultJson";
 import { TopBar } from "./TopBar";
 import { TrafficPanel } from "./TrafficPanel";
@@ -58,6 +60,7 @@ export function Sim() {
         if (!alive) return void live.close();
         session.current = live;
         dispatch({ type: "connected", sessionId: live.sessionId, protocolVersion: live.protocolVersion });
+        if (live.card || live.cardError) dispatch({ type: "card", card: live.card, error: live.cardError });
         if (live.toolsError) dispatch({ type: "toolsWarning", warning: `Could not read the server's tool list (${live.toolsError}). The rule parser continues with the three tools it knows.` });
       })
       .catch((error: unknown) => {
@@ -70,9 +73,9 @@ export function Sim() {
     };
   }, [ready, state.salonId, sessionNonce, protocol]);
 
-  const handle = useCallback((out: Interpreted, tool: string, args: Record<string, unknown>) => {
+  const handle = useCallback((out: Interpreted, tool: string, args: Record<string, unknown>, toolResult: unknown) => {
     if (out.kind === "formula") {
-      dispatch({ type: "result", view: out.view, raw: out.raw, usage: out.usage });
+      dispatch({ type: "result", view: out.view, raw: out.raw, toolResult, usage: out.usage });
       dispatch({ type: "reply", text: out.text });
     } else if (out.kind === "choice") {
       dispatch({ type: "dialog", dialog: { question: out.question, options: out.options, source: "needs_choice" } });
@@ -87,6 +90,16 @@ export function Sim() {
     }
   }, []); // run is reached through the closure; both only touch refs and dispatch
 
+  // The card is normally prefetched when the session opens; this covers a result linking a new one.
+  const loadCard = useCallback(async (live: LiveSession, uri: string | undefined) => {
+    if (!uri || latest.current.card?.uri === uri) return;
+    try {
+      dispatch({ type: "card", card: { uri, html: await live.readCard(uri) } });
+    } catch (error) {
+      dispatch({ type: "card", error: error instanceof Error ? error.message : String(error) });
+    }
+  }, []);
+
   const run = useCallback(
     async (tool: string, args: Record<string, unknown>) => {
       const live = session.current;
@@ -94,17 +107,18 @@ export function Sim() {
         dispatch({ type: "failed", error: "The Formula Book server is not reachable." });
         return;
       }
-      dispatch({ type: "busy", busy: true });
+      dispatch({ type: "busy", busy: true, invoking: invokingText(live.toolMeta, tool) });
       try {
         const result = await live.client.callTool({ name: tool, arguments: args });
-        handle(interpretResult(result as Parameters<typeof interpretResult>[0]), tool, args);
+        await loadCard(live, cardUri(result));
+        handle(interpretResult(result as Parameters<typeof interpretResult>[0]), tool, args, result);
       } catch (error) {
         dispatch({ type: "failed", error: error instanceof Error ? error.message : String(error) });
       } finally {
         dispatch({ type: "busy", busy: false });
       }
     },
-    [handle],
+    [handle, loadCard],
   );
 
   const send = useCallback(
@@ -155,10 +169,23 @@ export function Sim() {
       )}
       <main className="grid gap-4 p-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <section className="flex flex-col gap-4">
+          <DeviceStage state={state} onDevice={(device) => dispatch({ type: "device", device })} />
           <Conversation state={state} onSend={send} />
-          <ResultJson state={state} />
         </section>
-        <TrafficPanel rows={state.traffic} />
+        <section className="flex flex-col gap-4">
+          <TrafficPanel rows={state.traffic} />
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              data-testid="debug-toggle"
+              type="checkbox"
+              className="size-5"
+              checked={state.debug}
+              onChange={(e) => dispatch({ type: "debug", debug: e.target.checked })}
+            />
+            Show the raw result (debug)
+          </label>
+          {state.debug && <ResultJson state={state} />}
+        </section>
       </main>
       {state.dialog && <ChoiceDialog dialog={state.dialog} onChoose={choose} />}
     </div>

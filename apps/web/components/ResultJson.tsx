@@ -1,6 +1,6 @@
 import type { SimState } from "@/lib/sim-state";
 
-/** M1's plain view of the last tool result; the MCP Apps card replaces it in M2. */
+/** M1's plain view of the last tool result, kept behind the debug toggle now that the card exists. */
 export function ResultJson({ state }: { state: SimState }) {
   const result = state.result;
   if (!result) {

@@ -27,10 +27,11 @@ Each entry: task, steps, expected, actual, severity, workaround, suggestion. Wri
 - Task: run the server's integration tests and the browser sim against `http://127.0.0.1`.
 - Steps: start the server, send `initialize`, `tools/list` and `tools/call` with curl and with Node fetch.
 - Expected: responses arrive as the server wrote them.
-- Actual: with Norton running, (a) any response on a path containing "mcp" gets a `transfer-encoding: chunked` header injected while the body stays unchunked, so every HTTP client rejects it; (b) on another path, `tools/list` responses still arrive de-chunked under a chunked header, and fixed-length JSON errors to requests carrying `Mcp-Session-Id` are corrupted the same way. `tools/call` responses pass. The server writes valid responses (checked with `res._header`); the same calls work over an in-memory transport.
-- Severity: high on this machine. Every MCP client, Chrome included, fails `tools/list`.
-- Workaround: `MCP_PATH` setting (default `/mcp`), chunked JSON error bodies, and `tools/list` tested in memory. In Chrome the sim's `tools/list` fails with `ERR_INVALID_CHUNKED_ENCODING`; the sim waits 8 seconds, shows a visible warning and carries on with the three known tools, so the golden path still runs. The browser path is only fully clean once the security software leaves loopback traffic alone.
-- Suggestion (for MCP builders): if a local MCP server fails with `HPE_INVALID_CHUNK_SIZE` or `ERR_INVALID_CHUNKED_ENCODING`, check for security software that inspects loopback HTTP before debugging the server.
+- Actual: with Norton running, any response that leaves the server with a `Content-Length` arrives with that header replaced by `transfer-encoding: chunked` while the body stays unchunked, so every HTTP client rejects it (`HPE_INVALID_CHUNK_SIZE` in Node, `ERR_INVALID_CHUNKED_ENCODING` in Chrome). The MCP SDK buffers any reply that is ready at once (`tools/list`, `resources/read`, `ping`) and sends it with a length; `tools/call`, which awaits work, streams chunked and passes. That is why it first looked like a path or method rule. The server writes valid responses (checked with `res._header`); the same calls work over an in-memory transport.
+- Severity: high on this machine. Every MCP client, Chrome included, failed `tools/list` and the MCP Apps `resources/read`.
+- Workaround: the server strips `Content-Length` from MCP responses so Node sends them chunked, and writes its JSON errors chunked. With that, `tools/list` and `resources/read` pass over HTTP on `/mcp` with Norton still running. `MCP_PATH` stays configurable. The sim still times out `tools/list` after 8 seconds and shows a warning if a listing fails.
+- Suggestion (for MCP builders): if a local MCP server fails with `HPE_INVALID_CHUNK_SIZE` or `ERR_INVALID_CHUNKED_ENCODING` on small fast replies only, check for security software that inspects loopback HTTP, and try sending the replies chunked.
+- Suggestion (for the MCP SDK): an option to stream every response instead of buffering short ones would avoid this class of middlebox bug.
 
 ## 3. MCP Apps package and SDK majors (21 Oct 2026)
 

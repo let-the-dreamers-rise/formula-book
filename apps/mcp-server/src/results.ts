@@ -1,4 +1,5 @@
 import { computeTotals, speakFormula, type Formula } from "@formula-book/core";
+import { cardMeta } from "./card.ts";
 
 export interface ToolResult {
   [key: string]: unknown;
@@ -47,7 +48,8 @@ export function formulaResult(input: {
 }): ToolResult {
   const totals = computeTotals(input.formula);
   const sentence = speakFormula(input.client, input.formula, input.factor);
-  return result(input.action === "save" ? `Saved. ${sentence}` : sentence, {
+  const text = input.action === "save" ? `Saved. ${sentence}` : sentence;
+  const shown = result(text, {
     status: "ok",
     action: input.action,
     client: input.client,
@@ -58,6 +60,8 @@ export function formulaResult(input: {
     ...(input.action === "save" && { saved: true }),
     usage: input.usage,
   });
+  // Only formula results point at the card; refusals and choices are spoken, not drawn.
+  return { ...shown, _meta: cardMeta(input.action) };
 }
 
 export function refusal(reason: string, message: string, extra: Record<string, unknown> = {}): ToolResult {

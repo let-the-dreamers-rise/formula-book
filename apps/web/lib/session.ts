@@ -1,7 +1,10 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { ElicitRequestSchema, type ElicitResult } from "@modelcontextprotocol/sdk/types.js";
+import { cardUri, type ToolMeta } from "./devices.ts";
 import { LoggingTransport, type Direction } from "./traffic.ts";
+
+const CARD_MIME = "text/html;profile=mcp-app";
 
 export interface ElicitPrompt {
   readonly question: string;
@@ -24,7 +27,12 @@ export interface LiveSession {
   readonly protocolVersion?: string;
   /** Tool names from tools/list, which a host reads before choosing a tool; undefined if listing failed. */
   readonly tools?: readonly string[];
+  readonly toolMeta?: ToolMeta;
   readonly toolsError?: string;
+  /** The card the tools link to, read once when the session opens, as a host prefetches UI resources. */
+  readonly card?: { readonly uri: string; readonly html: string };
+  readonly cardError?: string;
+  readCard(uri: string): Promise<string>;
   close(): Promise<void>;
 }
 
@@ -33,6 +41,32 @@ const LIST_TIMEOUT_MS = 8_000;
 function optionsFrom(schema: unknown): readonly string[] {
   const client = (schema as { properties?: { client?: { enum?: unknown } } })?.properties?.client;
   return Array.isArray(client?.enum) ? client.enum.map(String) : [];
+}
+
+async function readCard(client: Client, uri: string): Promise<string> {
+  const { contents } = await client.readResource({ uri }, { timeout: LIST_TIMEOUT_MS });
+  const html = contents.find((c) => c.uri === uri && c.mimeType === CARD_MIME && "text" in c);
+  if (!html || !("text" in html)) throw new Error(`${uri} is not an MCP Apps HTML resource`);
+  return html.text;
+}
+
+async function listTools(client: Client) {
+  try {
+    const { tools } = await client.listTools(undefined, { timeout: LIST_TIMEOUT_MS });
+    const toolMeta: ToolMeta = Object.fromEntries(tools.map((t) => [t.name, t._meta as ToolMeta[string]]));
+    return { tools: tools.map((t) => t.name), toolMeta, uri: tools.map(cardUri).find(Boolean) };
+  } catch (error) {
+    return { toolsError: error instanceof Error ? error.message : String(error) };
+  }
+}
+
+async function prefetchCard(client: Client, uri: string | undefined) {
+  if (!uri) return {};
+  try {
+    return { card: { uri, html: await readCard(client, uri) } };
+  } catch (error) {
+    return { cardError: error instanceof Error ? error.message : String(error) };
+  }
 }
 
 /** A real MCP client over Streamable HTTP, as a host would run one. */
@@ -50,13 +84,13 @@ export async function openSession(options: SessionOptions): Promise<LiveSession>
   });
   const transport = new LoggingTransport(http, options.onTraffic, options.offerProtocol);
   await client.connect(transport);
-  const listing = await client
-    .listTools(undefined, { timeout: LIST_TIMEOUT_MS })
-    .then(({ tools }) => ({ tools: tools.map((t) => t.name) }))
-    .catch((error: unknown) => ({ toolsError: error instanceof Error ? error.message : String(error) }));
+  const { uri, ...listing } = await listTools(client);
+  const prefetched = await prefetchCard(client, uri);
   return {
     client,
     ...listing,
+    ...prefetched,
+    readCard: (cardAt) => readCard(client, cardAt),
     sessionId: transport.sessionId,
     protocolVersion: transport.protocolVersion,
     close: async () => {

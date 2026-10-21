@@ -5,7 +5,7 @@ export interface TokenGrant {
 
 export interface Config {
   readonly port: number;
-  /** "/mcp" by convention. Some security software rewrites local responses on paths containing "mcp". */
+  /** "/mcp" by convention; configurable for hosts that mount the server elsewhere. */
   readonly mcpPath: string;
   readonly dataDir: string;
   readonly tokens: ReadonlyMap<string, TokenGrant>;

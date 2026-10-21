@@ -1,6 +1,7 @@
 import { resolveClient, scaleFormula, validateDeveloper } from "@formula-book/core";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
+import { cardMeta } from "./card.ts";
 import { chooseClient, type SessionInfo } from "./choose.ts";
 import type { Config } from "./config.ts";
 import { formulaResult, refusal, REFUSALS, type ToolResult } from "./results.ts";
@@ -10,6 +11,8 @@ interface Deps {
   readonly store: Store;
   readonly config: Config;
   readonly session: SessionInfo;
+  /** Test-only pause before each tool runs, so the loading state can be seen; 0 outside E2E. */
+  readonly delayMs: () => number;
 }
 
 type Extra = { requestId: string | number };
@@ -48,8 +51,10 @@ export function registerTools(server: McpServer, deps: Deps): void {
     return found;
   };
   const usage = (s: Salon) => ({ count: s.formulas.length, cap: config.cap });
-  const pause = () =>
-    config.e2e && config.toolDelayMs > 0 ? new Promise((r) => setTimeout(r, config.toolDelayMs)) : Promise.resolve();
+  const pause = () => {
+    const ms = config.e2e ? deps.delayMs() : 0;
+    return ms > 0 ? new Promise((r) => setTimeout(r, ms)) : Promise.resolve();
+  };
 
   async function resolveExisting(s: Salon, spoken: string, tool: string, extra: Extra): Promise<Resolved> {
     const match = resolveClient(spoken, s.clients);
@@ -66,6 +71,7 @@ export function registerTools(server: McpServer, deps: Deps): void {
       description: DESCRIPTIONS.get_last_formula,
       inputSchema: { client_name: clientName },
       annotations: { readOnlyHint: true },
+      _meta: cardMeta("get"),
     },
     async ({ client_name }, extra) => {
       await pause();
@@ -89,6 +95,7 @@ export function registerTools(server: McpServer, deps: Deps): void {
         target_total_grams: z.number().optional().describe("Scale so colour plus developer weighs this many grams."),
       },
       annotations: { readOnlyHint: true },
+      _meta: cardMeta("scale"),
     },
     async ({ client_name, factor, target_total_grams }, extra) => {
       await pause();
@@ -130,6 +137,7 @@ export function registerTools(server: McpServer, deps: Deps): void {
         processing_minutes: z.number().int().positive().optional().describe("Processing time in minutes."),
         note: z.string().max(200).optional().describe("A short note, for example 'root touch-up'."),
       },
+      _meta: cardMeta("save"),
     },
     async (args, extra) => {
       await pause();
