@@ -1,0 +1,16 @@
+[
+  { "id": "title", "text": "You're a colourist. Gloves on, bowl in hand, and your client's formula is in a notebook across the room. Formula Book fixes that. You just say it." },
+  { "id": "open", "text": "Here's the real thing running. A simulated Alexa plus screen, clearly labelled, talking to a real M C P server. Watch the traffic panel: every call you see is live." },
+  { "id": "lena", "text": "Lena's in the chair. Lena's last formula. There it is: forty grams 5N, ten grams 6.3, developer and timing, all on the card." },
+  { "id": "scale", "text": "Longer hair today? Make it one and a half times. It knows we mean Lena, and the server does the maths. A hundred and fifty grams. No calculator, no gloves off." },
+  { "id": "marta", "text": "New client? Say the whole formula in one breath. Saved, developer worked out." },
+  { "id": "session", "text": "Now I throw the session away and start a fresh one. Marta is still there. The memory lives on the server, not in the chat." },
+  { "id": "priya", "text": "Two clients called Priya. Most assistants would guess. This one asks, using M C P elicitation." },
+  { "id": "rohan", "text": "Never heard of Rohan? It says so, and tells you what to do next. It never makes up a formula." },
+  { "id": "devices", "text": "Same answer on a phone, no new request. And on a speaker with no screen at all, one sentence carries every number." },
+  { "id": "claude", "text": "Now a curveball. Lena has thick hair today, go for twice the amount. The rule parser has no pattern for that. Flip the chooser to Claude Haiku. It reads the server's tool list and picks scale, times two. The maths still happens on the server." },
+  { "id": "prior", "text": "Is this new? Partly, and here's the honest picture. A colour brand already has a voice skill for product questions. Formula apps and salon software store formulas, but you type them in. Nobody captures and scales them by voice, at the bowl. And to be straight with you: this demo runs on a simulator, not a real Alexa plus device yet." },
+  { "id": "plan", "text": "Free for fifty formulas, and the server enforces it. Number fifty-one? Politely refused. The price is a hypothesis, nobody gets charged, and this waitlist is a local demo store." },
+  { "id": "open-source", "text": "There's a site for salon owners, and the whole thing is open source under M I T. A ten step golden path passes ten times in a row in Chrome, with a friction log and product feedback for every tool." },
+  { "id": "end", "text": "Formula Book. Say it at the bowl." }
+]

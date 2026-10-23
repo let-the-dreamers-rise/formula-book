@@ -126,6 +126,11 @@ Unit and server tests run with Vitest (about 93% of lines). The Playwright golde
 - `apps/mcp-server`: the MCP server, its tools, the card (`card/`), store, plan and waitlist routes.
 - `apps/web`: the simulated Alexa+ host at `/sim`.
 - `e2e`: Playwright tests. `seed`: demo data. `docs`: friction log, product feedback, validation questions.
+- `video`: the script that recorded the demo video. `record.mjs` drives real Chrome through the golden path against a running server and captures frames with Chrome's screencast; `mux.mjs` lays the narration over them with ffmpeg. The narration is synthesised speech (edge-tts), and the footage is the product running, not a mock-up.
+
+## Open source contribution
+
+During the hackathon: [modelcontextprotocol/ext-apps#824](https://github.com/modelcontextprotocol/ext-apps/pull/824), a README note saying which `ext-apps` line to use with the v1 MCP SDK (1.x peers on `@modelcontextprotocol/sdk`, 2.x on the split v2 packages). This project hit that question while choosing versions.
 
 ## Business
 
