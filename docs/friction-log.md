@@ -33,6 +33,36 @@ Each entry: task, steps, expected, actual, severity, workaround, suggestion. Wri
 - Suggestion (for MCP builders): if a local MCP server fails with `HPE_INVALID_CHUNK_SIZE` or `ERR_INVALID_CHUNKED_ENCODING` on small fast replies only, check for security software that inspects loopback HTTP, and try sending the replies chunked.
 - Suggestion (for the MCP SDK): an option to stream every response instead of buffering short ones would avoid this class of middlebox bug.
 
+## 5. Keeping MCP sessions on a serverless host (23 Oct 2026)
+
+- Task: host the demo so judges can use it without installing anything.
+- Steps: deployed the Next.js host to Vercel; looked at where the Streamable HTTP server could run.
+- Expected: run the MCP server as a serverless function next to the web app.
+- Actual: Streamable HTTP keeps a transport per session in memory (`Mcp-Session-Id`), and the elicitation round trip (`elicitation/create` on the same POST stream) needs that session to stay on one process. A serverless function cannot promise that, so the "which Priya?" question would break between invocations.
+- Severity: medium for anyone hosting an MCP server with elicitation on serverless.
+- Workaround: the hosted demo runs the same server code inside the browser tab over `InMemoryTransport` pairs (`apps/mcp-server/src/in-tab.ts`), with the card HTML generated into a module so the server needs no file access. Streamable HTTP is used locally and in the integration tests.
+- Suggestion (for the MCP SDK docs): a page on stateless versus stateful Streamable HTTP deployments that says which features (elicitation, server-initiated requests) need a sticky process.
+
+## 6. Recording the demo video with Playwright on Windows (23 Oct 2026)
+
+- Task: record the golden path in real Chrome for the demo video.
+- Steps: `browser.newContext({ recordVideo })`.
+- Expected: a video file, since ffmpeg 8.1 was already installed.
+- Actual: Playwright wants its own ffmpeg download (`npx playwright install ffmpeg`); the system ffmpeg is ignored.
+- Severity: low.
+- Workaround: capture frames through Chrome's `Page.startScreencast` over CDP with their timestamps, write an ffmpeg concat list, and mux with the installed ffmpeg (`video/record.mjs`, `video/mux.mjs`). Frames arrive only when the picture changes, so the list carries each frame's real duration.
+- Suggestion: let `recordVideo` take a path to an existing ffmpeg.
+
+## 7. Vercel build of an npm workspace from Windows (23 Oct 2026)
+
+- Task: `vercel build` locally, then deploy prebuilt output.
+- Steps: ran `vercel build --prod` from the repo root with `rootDirectory` set to `apps/web`.
+- Expected: a `.vercel/output` folder.
+- Actual: the build creates symlinks between function folders (`_global-error.rsc.func`), which fails with `EPERM` on Windows without Developer Mode. Building on Vercel instead failed twice: the workspace install skipped the root dev dependencies (`@types/node` missing for the web app), and `next build` type-checked the test files that import the Express server.
+- Severity: medium; about forty minutes lost the night before the deadline.
+- Workaround: build on Vercel; declare `@types/node` in `apps/web`; point `next.config.ts` at a `tsconfig.build.json` that excludes `test/` and `scripts/`.
+- Suggestion (for Vercel): say that local builds need symlink rights on Windows; install root dev dependencies for workspace builds. (For Next.js): a documented way to type-check only the files that ship.
+
 ## 3. MCP Apps package and SDK majors (21 Oct 2026)
 
 - Task: add the MCP Apps card with `@modelcontextprotocol/ext-apps`.

@@ -38,9 +38,14 @@ One entry per tool used in the build. Each says what worked, what did not, and w
 
 ## Anthropic API (Claude Haiku 5.5 as the tool chooser)
 
-- Worked: the MCP server's `tools/list` schemas went straight into the Messages API `tools` field; Haiku picked `scale_formula` with `factor: 2` for "go for twice the amount" and declined off-topic requests in one sentence.
+- Worked: the MCP server's `tools/list` schemas went straight into the Messages API `tools` field; Haiku picked `scale_formula` with `factor: 2` for "go for twice the amount" and declined off-topic requests in one sentence. Feeding each round's results back as `tool_result` blocks let it read the diary server first and then call Formula Book once per booked client, with no extra prompting.
 - Did not: MCP's `inputSchema` and the SDK's `input_schema` type differ slightly in TypeScript, so a cast was needed.
 - Change: a helper in the SDK that takes an MCP tool list as-is.
+
+## Vercel (hosting the host)
+
+- Worked: `vercel deploy --prod` from the repo root with `rootDirectory` set, and sensitive environment variables for the Claude key.
+- Did not: local `vercel build` needs symlink rights on Windows; workspace builds skipped root dev dependencies (friction log entry 7). No way to keep an MCP session on one process (entry 5), so the demo runs the server code in the tab.
 
 ## Claude Code and the Anthropic API
 
