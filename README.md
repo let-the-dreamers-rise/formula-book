@@ -4,7 +4,7 @@ Formula Book lets hair colourists say a client's colour formula at the bowl and 
 
 It is a self-hosted MCP server (Streamable HTTP, MCP spec 2025-11-25) with three tools and an MCP Apps formula card. The demo drives it from a **simulated Alexa+ client** in this repo, labelled on every screen. It has not been tested on a real Alexa+ device.
 
-**Try it without installing:** https://formula-book-eight.vercel.app/sim runs the simulated host in **Replay** mode: the real MCP client, card and traffic panel, answered from replies recorded off the real server for the demo sentences (see "Replay mode" below). For the live server, run it locally.
+**Try it without installing:** https://formula-book-eight.vercel.app/sim runs the real Formula Book and salon diary server code **inside your browser tab** (badge: "Server in this tab"), over in-memory MCP transports instead of Streamable HTTP, because the host has no long-running process to keep MCP sessions on. Same tools, card, elicitation and free-plan cap; saves last until you reload. Pick "Claude Haiku 5.5" in the Chooser to try "Who's booked in today? Get their bowls ready" (Claude runs on the server, capped at 400 calls a day). For Streamable HTTP, run it locally ("Run it" below).
 
 ## Prior art, first
 
@@ -104,11 +104,16 @@ Open http://localhost:3000/sim for the simulated Alexa+ demo, or http://localhos
 | `ANTHROPIC_API_KEY` | unset | Web app only. Enables the Claude chooser. Read on the server, never sent to the browser. About 700 input tokens per choice; 30 calls a minute at most |
 | `CHOOSER` | on when a key is set | `off` hides the Claude chooser even with a key |
 | `DIARY_PORT` | 8790 | Diary server port (`NEXT_PUBLIC_DIARY_URL` tells the web app where it is; unset, the sim uses Formula Book only) |
-| `NEXT_PUBLIC_MODE` | unset | Web app only. `replay` opens the sim in Replay mode (the hosted build uses this) |
+| `NEXT_PUBLIC_MODE` | unset | Web app only. `in-tab` runs the server code in the page (the hosted build uses this; `?intab=1` locally); `replay` answers from recorded replies (`?replay=1`) |
+| `CHOOSER_DAILY_LIMIT` | 400 | Web app only. Claude chooser calls per UTC day per server instance |
+
+### In-tab mode
+
+`apps/mcp-server/src/in-tab.ts` builds the same Formula Book server (`buildServer`) and the diary server and connects them to the sim over `InMemoryTransport` pairs, with a `MemoryStore` seeded from `seed/`. Only the transport differs from the HTTP servers. The card HTML is generated into `src/card-html.ts` by `npm run build:card -w @formula-book/mcp-server`, so the server code needs no file access; a test fails if it is stale.
 
 ### Replay mode
 
-The hosted demo has no MCP server behind it, so it replays one. `apps/web/lib/replay-transport.ts` stands in for the Streamable HTTP transport: the real MCP SDK client sends its JSON-RPC to it and gets back the real server's replies, recorded by `apps/web/scripts/record-replay.ts` into `apps/web/lib/replay-fixture.json`. Initialize, `tools/list`, the card resource and the elicitation round trip for the two Priyas all go through the normal host code, and show in the traffic panel. A save is remembered for the rest of the tab, across new sessions. Anything outside the recorded sentences gets a plain refusal saying so, never a guessed formula. The banner reads "Recorded MCP server replies" and the badge "Replay". Open `/sim?replay=1` locally to try it, or press "Switch to replay" when the server is not reachable. To re-record: start the server with `DEMO_ADMIN=1`, then `MCP_URL=http://127.0.0.1:8787/mcp npx tsx apps/web/scripts/record-replay.ts`.
+Replay answers without any server code at all. `apps/web/lib/replay-transport.ts` stands in for the Streamable HTTP transport: the real MCP SDK client sends its JSON-RPC to it and gets back the real server's replies, recorded by `apps/web/scripts/record-replay.ts` into `apps/web/lib/replay-fixture.json`. Initialize, `tools/list`, the card resource and the elicitation round trip for the two Priyas all go through the normal host code, and show in the traffic panel. A save is remembered for the rest of the tab, across new sessions. Anything outside the recorded sentences gets a plain refusal saying so, never a guessed formula. The banner reads "Recorded MCP server replies" and the badge "Replay". Open `/sim?replay=1` locally to try it, or press "Switch to replay" when the server is not reachable. To re-record: start the server with `DEMO_ADMIN=1`, then `MCP_URL=http://127.0.0.1:8787/mcp npx tsx apps/web/scripts/record-replay.ts`.
 
 ## Tests
 
