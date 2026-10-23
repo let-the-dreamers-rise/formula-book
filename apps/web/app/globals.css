@@ -27,6 +27,21 @@ code {
   font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
 }
 
+.rise {
+  animation: rise 520ms var(--ease-settle) both;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 .waveform-busy .waveform-bar {
   animation: waveform 900ms var(--ease-settle) infinite alternate;
 }

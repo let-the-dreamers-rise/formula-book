@@ -34,6 +34,47 @@ Related work: `alexa-plus-sim`, an Echo-Show-style simulator with a Bedrock tool
 | Waitlist | A local JSON file ("Local demo store") in `DATA_DIR`. No public signup count is claimed |
 | Demo data | Seeded, labelled "Demo data" in the app. Lena, Priya Shah, Priya Kapoor and Booth 12 are not real people |
 
+## How it fits together
+
+```mermaid
+flowchart LR
+  subgraph Host["Simulated Alexa+ host (apps/web, labelled on screen)"]
+    MIC["Mic: Web Speech"] --> CH{"Chooser"}
+    TXT["Text box"] --> CH
+    CH -->|default| RP["Rule parser"]
+    CH -->|optional| CL["Claude Haiku 5.5 via /api/choose"]
+    RP --> MC["MCP client"]
+    CL --> MC
+    MC --> FR["Sandboxed iframe + AppBridge"]
+    MC --> TTS["speechSynthesis"]
+  end
+  subgraph Server["Formula Book MCP server (apps/mcp-server)"]
+    T1["get_last_formula"]
+    T2["scale_formula"]
+    T3["save_formula"]
+    CARD["ui://formula-card resource"]
+    CORE["formula-core maths"]
+    STORE[("Per-salon store")]
+  end
+  MC <-->|"Streamable HTTP, JSON-RPC, 2025-11-25"| Server
+  Server -.->|"elicitation/create: which Priya?"| MC
+  T1 --> CORE
+  T2 --> CORE
+  T3 --> STORE
+```
+
+One turn: the utterance goes to a chooser, which picks a tool from the server's own `tools/list`. The host sends `tools/call` with the salon's bearer token. The server resolves the client (asking through elicitation if two match), does the maths, checks the plan cap and returns `structuredContent`, a speakable sentence and `_meta.ui.resourceUri`. The host renders the card it prefetched, or on the speaker frame speaks the sentence. Every JSON-RPC message appears in the traffic panel.
+
+## Where to look, by judging criterion
+
+| Criterion | Evidence in this repo |
+|---|---|
+| Tech implementation | MCP server on spec 2025-11-25 over Streamable HTTP with per-session state (`apps/mcp-server/src/app.ts`); elicitation on the request's own stream with a `needs_choice` fallback for 2025-03-26 (`choose.ts`); MCP Apps card with a content-hashed URI and empty CSP (`src/card.ts`, `card/`); host bridge with `hostContext` per device (`apps/web/components/CardFrame.tsx`); 143 unit tests and a ten-step Playwright golden path run ten times in a row |
+| Design | One golden path for one user at the bowl; loading, empty, refusal and error states; three device frames from one result; every refusal is plain words with a next step, no codes |
+| Potential impact | A named user (independent colourists, about 48% of 575,200 US hairdressers are self-employed); comparables that already charge for formula records (`docs/market-evidence.md`); a price hypothesis enforced by the server at 50 formulas |
+| Quality of the idea | Voice capture and spoken scaling at the bowl, on any scale; the same server serves a screen card, a phone card and a speaker sentence; the server asks rather than guesses |
+| Product feedback | `docs/product-feedback.md` (each tool used) and `docs/friction-log.md` (four entries with steps, expected, actual, severity, fix) |
+
 ## Run it
 
 Node 22 or later, Chrome.
