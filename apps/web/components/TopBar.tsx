@@ -3,7 +3,16 @@ import type { SimState } from "@/lib/sim-state";
 
 const STATUS_TEXT = { connecting: "Connecting", connected: "Connected", unreachable: "Not reachable" } as const;
 
-export function TopBar(props: { state: SimState; onSalon: (id: string) => void; onNewSession: () => void }) {
+interface ChooserControl {
+  readonly value: "rules" | "claude";
+  /** The chooser that picked the last tool, shown on the badge. */
+  readonly ranWith: string;
+  /** Present only when the server has a Claude key and CHOOSER is not off. */
+  readonly claudeLabel?: string;
+  readonly onChange: (value: "rules" | "claude") => void;
+}
+
+export function TopBar(props: { state: SimState; onSalon: (id: string) => void; onNewSession: () => void; chooser: ChooserControl }) {
   const { state } = props;
   return (
     <header className="flex flex-wrap items-center gap-3 border-b border-black/10 bg-[var(--lcd)] px-4 py-3">
@@ -14,8 +23,22 @@ export function TopBar(props: { state: SimState; onSalon: (id: string) => void; 
         Live server
       </span>
       <span data-testid="chooser-badge" className="rounded bg-[var(--copper)] px-2 py-1 text-sm text-white">
-        Rule parser
+        {props.chooser.ranWith}
       </span>
+      {props.chooser.claudeLabel && (
+        <label className="flex items-center gap-2 text-sm">
+          Chooser
+          <select
+            data-testid="chooser-select"
+            className="min-h-11 rounded border border-black/20 bg-white px-2"
+            value={props.chooser.value}
+            onChange={(e) => props.chooser.onChange(e.target.value === "claude" ? "claude" : "rules")}
+          >
+            <option value="rules">Rule parser</option>
+            <option value="claude">{props.chooser.claudeLabel}</option>
+          </select>
+        </label>
+      )}
       <span data-testid="server-status" className="rounded bg-white px-2 py-1 text-sm">
         {STATUS_TEXT[state.status]}
       </span>

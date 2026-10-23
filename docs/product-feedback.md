@@ -36,6 +36,12 @@ One entry per tool used in the build. Each says what worked, what did not, and w
 - Worked: `frameLocator` assertions inside the sandboxed card iframe.
 - Did not: a click straight after a scripted scroll sometimes landed in the out-of-process iframe because hit-testing was a frame old. Waiting two animation frames fixed it.
 
+## Anthropic API (Claude Haiku 5.5 as the tool chooser)
+
+- Worked: the MCP server's `tools/list` schemas went straight into the Messages API `tools` field; Haiku picked `scale_formula` with `factor: 2` for "go for twice the amount" and declined off-topic requests in one sentence.
+- Did not: MCP's `inputSchema` and the SDK's `input_schema` type differ slightly in TypeScript, so a cast was needed.
+- Change: a helper in the SDK that takes an MCP tool list as-is.
+
 ## Claude Code and the Anthropic API
 
 - Worked: research, spec, and most of the code were written with Claude under the builder's direction; tests were written before code for each milestone.

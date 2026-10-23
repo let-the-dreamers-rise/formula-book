@@ -9,6 +9,10 @@ import { parseUtterance } from "@/lib/rule-parser";
 import { openSession, type LiveSession } from "@/lib/session";
 import { initialState, reduce } from "@/lib/sim-state";
 import { speak } from "@/lib/voice";
+import { chooserStatus, chooseWithClaude, type ChooserStatus } from "@/lib/choose-client";
+import type { ToolChoice } from "@/lib/rule-parser";
+
+export type ChooserId = "rules" | "claude";
 import { ChoiceDialog } from "./ChoiceDialog";
 import { Conversation } from "./Conversation";
 import { DeviceStage } from "./DeviceStage";
@@ -34,9 +38,16 @@ export function Sim() {
   const latest = useRef(state);
   latest.current = state;
 
+  const [chooser, setChooser] = useState<ChooserId>("rules");
+  const [claude, setClaude] = useState<ChooserStatus>({ available: false, label: "" });
+  const [ranWith, setRanWith] = useState("Rule parser");
+  const chooserRef = useRef(chooser);
+  chooserRef.current = chooser;
+
   useEffect(() => {
     setProtocol(offeredProtocol());
     setReady(true);
+    chooserStatus().then(setClaude).catch(() => undefined);
   }, []);
 
   useEffect(() => {
@@ -123,18 +134,40 @@ export function Sim() {
     [handle, loadCard],
   );
 
+  // The badge always names the chooser that actually ran; a failed Claude call is shown, never hidden.
+  const pickTool = useCallback(async (text: string): Promise<ToolChoice | undefined> => {
+    const lastClient = latest.current.lastClient;
+    const defs = session.current?.toolDefs;
+    if (chooserRef.current !== "claude" || !defs?.length) {
+      setRanWith("Rule parser");
+      return parseUtterance(text, { lastClient });
+    }
+    dispatch({ type: "busy", busy: true, invoking: "Choosing a tool" });
+    try {
+      const choice = await chooseWithClaude(text, lastClient, defs);
+      setRanWith(claude.label || "Claude");
+      return choice;
+    } catch (error) {
+      dispatch({ type: "failed", error: error instanceof Error ? error.message : String(error) });
+      return undefined;
+    } finally {
+      dispatch({ type: "busy", busy: false });
+    }
+  }, [claude.label]);
+
   const send = useCallback(
     async (utterance: string) => {
       const text = utterance.trim();
       if (!text || latest.current.busy) return;
       dispatch({ type: "user", text });
-      const choice = parseUtterance(text, { lastClient: latest.current.lastClient });
+      const choice = await pickTool(text);
+      if (!choice) return;
       if (choice.tool === null) dispatch({ type: "reply", text: choice.reason });
       else if (session.current?.tools && !session.current.tools.includes(choice.tool)) {
         dispatch({ type: "failed", error: `The server does not offer the ${choice.tool} tool.` });
       } else await run(choice.tool, { ...choice.arguments });
     },
-    [run],
+    [run, pickTool],
   );
 
   // Speak each new reply; the turn count changes even when two replies have the same words.
@@ -157,6 +190,7 @@ export function Sim() {
         state={state}
         onSalon={(salonId) => dispatch({ type: "salon", salonId })}
         onNewSession={() => setSessionNonce((n) => n + 1)}
+        chooser={{ value: chooser, ranWith, claudeLabel: claude.available ? claude.label : undefined, onChange: setChooser }}
       />
       {state.toolsWarning && (
         <p data-testid="tools-warning" role="status" className="mx-4 mt-3 rounded border border-[var(--copper)] bg-white px-4 py-2 text-sm">

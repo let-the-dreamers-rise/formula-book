@@ -26,7 +26,7 @@ Related work: `alexa-plus-sim`, an Echo-Show-style simulator with a Bedrock tool
 | MCP Apps card: `ui://formula-card/<hash>.html`, `text/html;profile=mcp-app`, linked by `_meta.ui.resourceUri`, rendered in a sandboxed iframe through the ext-apps `AppBridge` | Real, in our own host |
 | `hostContext` device values (`echo-show-8`, `mobile`, `voice`) | **Our guess.** The official list is partner-only. The card falls back to `maxWidth` with a console warning when the class is unknown |
 | Alexa+ itself | **Simulated.** A web page acting as the host: it lists tools, picks one, calls it over MCP and shows the card |
-| Choosing the tool | A rule parser (`apps/web/lib/rule-parser.ts`). No model is called on the default path. A Bedrock chooser was planned and cut for time |
+| Choosing the tool | Two choosers, and the badge always names the one that ran. Default: a rule parser (`apps/web/lib/rule-parser.ts`), no model call. Optional: Claude Haiku 5.5 picks one tool and its arguments from the server's own `tools/list`, as a host's model would (`apps/web/lib/chooser.ts`, called server-side from `app/api/choose`). It appears only when the web server has `ANTHROPIC_API_KEY` |
 | Voice in | Chrome's Web Speech API. Chrome may send the audio to its vendor's speech service. Accuracy on shade codes is not measured; the text box always works |
 | Voice out | The browser's `speechSynthesis` reading the server's sentence. Not Alexa's voice |
 | Free plan of 50 formulas | Real: the server refuses the 51st save |
@@ -56,6 +56,8 @@ The MCP endpoint is `http://127.0.0.1:8787/mcp`. Two public demo tokens guard de
 | `FREE_FORMULA_CAP` | 50 | Formulas per salon on the free plan |
 | `DEMO_ADMIN` | off | `1` enables `POST /admin/reset-demo` |
 | `E2E` | off | `1` enables the test-only tool delay |
+| `ANTHROPIC_API_KEY` | unset | Web app only. Enables the Claude chooser. Read on the server, never sent to the browser. About 700 input tokens per choice; 30 calls a minute at most |
+| `CHOOSER` | on when a key is set | `off` hides the Claude chooser even with a key |
 
 ## Tests
 

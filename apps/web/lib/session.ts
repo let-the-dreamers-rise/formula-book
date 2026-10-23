@@ -28,6 +28,8 @@ export interface LiveSession {
   /** Tool names from tools/list, which a host reads before choosing a tool; undefined if listing failed. */
   readonly tools?: readonly string[];
   readonly toolMeta?: ToolMeta;
+  /** Full definitions from tools/list, handed to the model chooser exactly as the server gave them. */
+  readonly toolDefs?: readonly { readonly name: string; readonly description?: string; readonly inputSchema: Record<string, unknown> }[];
   readonly toolsError?: string;
   /** The card the tools link to, read once when the session opens, as a host prefetches UI resources. */
   readonly card?: { readonly uri: string; readonly html: string };
@@ -54,7 +56,8 @@ async function listTools(client: Client) {
   try {
     const { tools } = await client.listTools(undefined, { timeout: LIST_TIMEOUT_MS });
     const toolMeta: ToolMeta = Object.fromEntries(tools.map((t) => [t.name, t._meta as ToolMeta[string]]));
-    return { tools: tools.map((t) => t.name), toolMeta, uri: tools.map(cardUri).find(Boolean) };
+    const toolDefs = tools.map((t) => ({ name: t.name, description: t.description, inputSchema: t.inputSchema as Record<string, unknown> }));
+    return { tools: tools.map((t) => t.name), toolMeta, toolDefs, uri: tools.map(cardUri).find(Boolean) };
   } catch (error) {
     return { toolsError: error instanceof Error ? error.message : String(error) };
   }
