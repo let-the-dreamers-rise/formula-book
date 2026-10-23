@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { SUGGESTIONS } from "@/lib/config";
 import type { SimState } from "@/lib/sim-state";
 import { MicButton } from "./MicButton";
@@ -8,6 +8,10 @@ import { MicButton } from "./MicButton";
 export function Conversation(props: { state: SimState; onSend: (text: string) => void; onVoiceError: (message: string) => void }) {
   const { state } = props;
   const [draft, setDraft] = useState("");
+  const list = useRef<HTMLOListElement>(null);
+  useEffect(() => {
+    if (list.current) list.current.scrollTop = list.current.scrollHeight;
+  }, [state.turns.length]);
   const submit = () => {
     props.onSend(draft);
     setDraft("");
@@ -31,7 +35,7 @@ export function Conversation(props: { state: SimState; onSend: (text: string) =>
           </div>
         </div>
       ) : (
-        <ol className="flex max-h-72 flex-col gap-2 overflow-y-auto">
+        <ol ref={list} className="flex max-h-56 flex-col gap-2 overflow-y-auto">
           {state.turns.map((turn, i) => (
             <li
               key={i}
@@ -43,8 +47,11 @@ export function Conversation(props: { state: SimState; onSend: (text: string) =>
           ))}
         </ol>
       )}
-      <p data-testid="spoken-reply" aria-live="polite" className="mt-3 min-h-6 text-base">
-        {state.spoken}
+      <p className="mt-3 flex min-h-6 items-baseline gap-2 text-sm text-black/70">
+        <span className="shrink-0 rounded bg-[var(--lcd)] px-1.5 py-0.5 text-xs uppercase tracking-wide">Spoken</span>
+        <span data-testid="spoken-reply" aria-live="polite">
+          {state.spoken}
+        </span>
       </p>
       <form
         className="mt-3 flex gap-2"

@@ -88,6 +88,8 @@ Unit and server tests run with Vitest (about 93% of lines). The Playwright golde
 
 ## Business
 
+Others already sell formula records: SalonScale says over 8,000 salons use it to weigh and save formulas, Vish and Daviana charge salons monthly for per-client formula history, and App Store apps such as Charm and Gloss sell formula saving to independent stylists. That shows the job is paid for; it does not show demand for doing it by voice. Sources and limits are in `docs/market-evidence.md`.
+
 Pricing hypothesis: free for the first 50 formulas, then a paid plan per colourist. The price has not been tested with anyone. No colourist conversations have happened yet; the three questions we would ask are in `docs/validation.md`. The builder has no salon contacts.
 
 ## Built with

@@ -16,7 +16,8 @@ export function TopBar(props: { state: SimState; onSalon: (id: string) => void; 
   const { state } = props;
   return (
     <header className="flex flex-wrap items-center gap-3 border-b border-black/10 bg-[var(--lcd)] px-4 py-3">
-      <p data-testid="sim-banner" className="font-semibold">
+      <p className="font-[Georgia,serif] text-2xl font-semibold tracking-tight">Formula Book</p>
+      <p data-testid="sim-banner" className="rounded bg-[var(--ink)] px-2 py-1 text-sm font-semibold text-white">
         Simulated Alexa+ surface. Real MCP server.
       </p>
       <span data-testid="mode-badge" className="rounded bg-white px-2 py-1 text-sm">
