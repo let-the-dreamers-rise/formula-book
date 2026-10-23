@@ -1,26 +1,11 @@
-import { createHash } from "node:crypto";
-import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { CARD_HASH, CARD_HTML } from "./card-html.ts";
 
 export const CARD_MIME = "text/html;profile=mcp-app";
 export const CARD_CSP = { connectDomains: [] as string[], resourceDomains: [] as string[] };
 
-const CARD_DIR = fileURLToPath(new URL("../card/", import.meta.url));
-
-function buildHtml(): string {
-  const read = (name: string) => readFileSync(`${CARD_DIR}${name}`, "utf8");
-  // Function replacers, so "$" in the CSS or script is never read as a replacement pattern.
-  return read("template.html")
-    .replace("{{style}}", () => read("card.css"))
-    .replace("{{script}}", () => read("card.js"));
-}
-
-const html = buildHtml();
-const hash = createHash("sha256").update(html).digest("hex").slice(0, 16);
-
-/** One self-contained HTML file; the hash in the URI changes whenever the content does. */
-export const CARD = { html, hash, uri: `ui://formula-card/${hash}.html` } as const;
+/** One self-contained HTML file (built from card/ by scripts/build-card.mjs); the hash in the URI changes with the content. */
+export const CARD = { html: CARD_HTML, hash: CARD_HASH, uri: `ui://formula-card/${CARD_HASH}.html` } as const;
 
 export type CardAction = "get" | "scale" | "save";
 

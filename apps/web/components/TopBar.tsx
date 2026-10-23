@@ -3,6 +3,14 @@ import type { SimState } from "@/lib/sim-state";
 
 const STATUS_TEXT = { connecting: "Connecting", connected: "Connected", unreachable: "Not reachable" } as const;
 
+const BANNER = {
+  live: "Simulated Alexa+ surface. Real MCP server.",
+  replay: "Simulated Alexa+ surface. Recorded MCP server replies.",
+  "in-tab": "Simulated Alexa+ surface. Real MCP server code, running in this tab.",
+} as const;
+
+const BADGE = { live: "Live server", replay: "Replay", "in-tab": "Server in this tab" } as const;
+
 interface ChooserControl {
   readonly value: "rules" | "claude";
   /** The chooser that picked the last tool, shown on the badge. */
@@ -14,7 +22,7 @@ interface ChooserControl {
 
 export function TopBar(props: {
   state: SimState;
-  replay: boolean;
+  mode: "live" | "replay" | "in-tab";
   /** True when the second MCP server, the salon diary, is connected too. */
   diary?: boolean;
   onSalon: (id: string) => void;
@@ -26,10 +34,10 @@ export function TopBar(props: {
     <header className="flex flex-wrap items-center gap-3 border-b border-black/10 bg-[var(--lcd)] px-4 py-3">
       <p className="font-[Georgia,serif] text-2xl font-semibold tracking-tight">Formula Book</p>
       <p data-testid="sim-banner" className="rounded bg-[var(--ink)] px-2 py-1 text-sm font-semibold text-white">
-        {props.replay ? "Simulated Alexa+ surface. Recorded MCP server replies." : "Simulated Alexa+ surface. Real MCP server."}
+        {BANNER[props.mode]}
       </p>
       <span data-testid="mode-badge" className="rounded bg-white px-2 py-1 text-sm">
-        {props.replay ? "Replay" : "Live server"}
+        {BADGE[props.mode]}
       </span>
       <span data-testid="chooser-badge" className="rounded bg-[var(--copper)] px-2 py-1 text-sm text-white">
         {props.chooser.ranWith}

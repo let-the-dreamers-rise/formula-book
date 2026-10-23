@@ -1,20 +1,18 @@
 import { randomUUID } from "node:crypto";
 import cors from "cors";
 import express, { type NextFunction, type Request, type Response } from "express";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { isInitializeRequest, LATEST_PROTOCOL_VERSION, SUPPORTED_PROTOCOL_VERSIONS } from "@modelcontextprotocol/sdk/types.js";
-import { registerCard } from "./card.ts";
 import type { SessionInfo } from "./choose.ts";
 import type { Config } from "./config.ts";
 import { loadSeeds } from "./seed.ts";
+import { buildServer, SERVER_INFO } from "./server.ts";
 import type { Store } from "./store.ts";
-import { registerTools } from "./tools.ts";
 import { joinWaitlist, readWaitlist, validEmail, WAITLIST_STORE_LABEL } from "./waitlist.ts";
 
 export const PLAN_PRICE = "Hypothesis, payments not live";
 
-export const SERVER_INFO = { name: "formula-book", version: "0.1.0" } as const;
+export { buildServer, SERVER_INFO };
 
 interface Session {
   readonly transport: StreamableHTTPServerTransport;
@@ -62,18 +60,6 @@ export function negotiate(requested: unknown): string {
 }
 
 const MAX_TEST_DELAY_MS = 5_000;
-
-export function buildServer(
-  config: Config,
-  store: Store,
-  session: SessionInfo,
-  delayMs: () => number = () => config.toolDelayMs,
-): McpServer {
-  const server = new McpServer(SERVER_INFO, { capabilities: { tools: {}, resources: {} } });
-  registerTools(server, { store, config, session, delayMs });
-  registerCard(server);
-  return server;
-}
 
 export function createApp(config: Config, store: Store) {
   const app = express();

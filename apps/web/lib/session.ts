@@ -1,5 +1,6 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
+import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 import { ElicitRequestSchema, type ElicitResult } from "@modelcontextprotocol/sdk/types.js";
 import { cardUri, type ToolMeta } from "./devices.ts";
 import type { ReplayFixture } from "./replay-fixture.ts";
@@ -23,6 +24,8 @@ export interface SessionOptions {
   readonly onElicit: (prompt: ElicitPrompt) => Promise<ElicitResult>;
   /** Answer from these recorded server replies instead of the network (replay mode). */
   readonly replay?: ReplayFixture;
+  /** A ready transport to use instead of the network, such as the in-tab server's. */
+  readonly transport?: Transport;
 }
 
 export interface LiveSession {
@@ -86,12 +89,12 @@ export async function openSession(options: SessionOptions): Promise<LiveSession>
       return options.onElicit({ question: params.message, options: optionsFrom(params.requestedSchema) });
     });
   }
-  const http = options.replay
+  const http = options.replay || options.transport
     ? undefined
     : new StreamableHTTPClientTransport(new URL(options.url), {
         requestInit: { headers: { Authorization: `Bearer ${options.token}` } },
       });
-  const inner = http ?? new ReplayTransport(options.replay as ReplayFixture, options.token);
+  const inner = options.transport ?? http ?? new ReplayTransport(options.replay as ReplayFixture, options.token);
   const transport = new LoggingTransport(inner, options.onTraffic, options.offerProtocol);
   await client.connect(transport);
   const { uri, ...listing } = await listTools(client);

@@ -12,6 +12,9 @@ export const DIARY_URL = process.env.NEXT_PUBLIC_DIARY_URL || "";
 /** Hosted builds with no MCP server set NEXT_PUBLIC_MODE=replay; ?replay=1 does the same per visit. */
 export const REPLAY_BY_DEFAULT = process.env.NEXT_PUBLIC_MODE?.trim() === "replay";
 
+/** NEXT_PUBLIC_MODE=in-tab (or ?intab=1) runs the real server code in the tab: the hosted live demo. */
+export const IN_TAB_BY_DEFAULT = process.env.NEXT_PUBLIC_MODE?.trim() === "in-tab";
+
 // Public demo tokens for the two demo salons; they guard demo data only and are named in the README.
 export const SALONS: readonly SalonOption[] = [
   { id: "demo-salon", name: "Demo Salon", token: "demo-salon-token" },

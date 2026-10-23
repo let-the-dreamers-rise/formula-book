@@ -4,9 +4,13 @@
   "private": true,
   "license": "MIT",
   "type": "module",
+  "exports": {
+    "./in-tab": "./src/in-tab.ts"
+  },
   "scripts": {
     "dev": "tsx watch src/main.ts",
-    "start": "tsx src/main.ts"
+    "start": "tsx src/main.ts",
+    "build:card": "node scripts/build-card.mjs"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",

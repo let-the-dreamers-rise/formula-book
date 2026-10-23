@@ -18,7 +18,18 @@ const MAX_TOOLS = 10;
 const MAX_RESULT = 4_000;
 const MAX_ID = 100;
 const LIMIT_PER_MINUTE = 30;
+// A ceiling on spend for a public demo: calls per UTC day on this server instance.
+const LIMIT_PER_DAY = Number(process.env.CHOOSER_DAILY_LIMIT || 400);
 const calls: number[] = [];
+let today = { day: "", count: 0 };
+
+function overDailyLimit(now: number): boolean {
+  const day = new Date(now).toISOString().slice(0, 10);
+  const count = today.day === day ? today.count : 0;
+  if (count >= LIMIT_PER_DAY) return true;
+  today = { day, count: count + 1 };
+  return false;
+}
 
 function available(): boolean {
   return Boolean(process.env.ANTHROPIC_API_KEY) && process.env.CHOOSER !== "off";
@@ -76,6 +87,7 @@ export async function POST(request: Request) {
   const input = parseBody(await request.json().catch(() => undefined));
   if (!input) return fail(400, "Send an utterance and the server's tool list.");
   if (overLimit(Date.now())) return fail(429, "Too many requests to the Claude chooser. Wait a minute.");
+  if (overDailyLimit(Date.now())) return fail(429, "The Claude chooser has used today's demo allowance. Switch to the rule parser.");
   try {
     const client = new Anthropic();
     // Tool schemas come from the MCP server's tools/list (JSON Schema objects), so the cast is to the SDK's type for them.

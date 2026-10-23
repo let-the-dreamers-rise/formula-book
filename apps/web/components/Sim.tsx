@@ -2,9 +2,10 @@
 
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import type { ElicitResult } from "@modelcontextprotocol/sdk/types.js";
-import { DIARY_URL, MCP_URL, REPLAY_BY_DEFAULT, SALONS } from "@/lib/config";
+import { DIARY_URL, IN_TAB_BY_DEFAULT, MCP_URL, REPLAY_BY_DEFAULT, SALONS } from "@/lib/config";
+import { inTabServers } from "@/lib/in-tab-client";
 import { runClaudeLoop } from "@/lib/claude-loop";
-import { replayJoin, replayUsage, replayWaitlist } from "@/lib/plan-replay";
+import { IN_TAB_STORE_LABEL, replayJoin, replayUsage, replayWaitlist } from "@/lib/plan-replay";
 import type { ReplayFixture } from "@/lib/replay-fixture";
 import { cardUri, invokingText } from "@/lib/devices";
 import { interpretResult, type Interpreted } from "@/lib/interpret";
@@ -31,6 +32,10 @@ function offeredProtocol(): string | undefined {
   return new URLSearchParams(window.location.search).get("protocol") ?? undefined;
 }
 
+function inTabRequested(): boolean {
+  return IN_TAB_BY_DEFAULT || (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("intab") === "1");
+}
+
 function replayRequested(): boolean {
   return REPLAY_BY_DEFAULT || (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("replay") === "1");
 }
@@ -45,6 +50,7 @@ export function Sim() {
   const [protocol, setProtocol] = useState<string | undefined>(undefined);
   const [ready, setReady] = useState(false);
   const [replay, setReplay] = useState(false);
+  const [inTab, setInTab] = useState(false);
   const [fixture, setFixture] = useState<ReplayFixture | undefined>(undefined);
   const session = useRef<LiveSession | undefined>(undefined);
   // The second MCP server, the salon's diary; only Claude's loop uses its tool.
@@ -63,6 +69,7 @@ export function Sim() {
   useEffect(() => {
     setProtocol(offeredProtocol());
     setReplay(replayRequested());
+    setInTab(!replayRequested() && inTabRequested());
     setReady(true);
     chooserStatus().then(setClaude).catch(() => undefined);
   }, []);
@@ -73,11 +80,13 @@ export function Sim() {
     const epoch = Date.now();
     const token = SALONS.find((s) => s.id === state.salonId)?.token ?? "";
     dispatch({ type: "connecting" });
-    loadFixture(replay)
-      .then((recorded) => {
+    const inTabTransport = inTab ? inTabServers().then((s) => s.formulaBook(token, protocol)) : Promise.resolve(undefined);
+    Promise.all([loadFixture(replay), inTabTransport])
+      .then(([recorded, transport]) => {
         if (recorded && alive) setFixture(recorded);
         return openSession({
       replay: recorded,
+      transport,
       url: MCP_URL,
       token,
       // A client offering 2025-03-26 cannot elicit, so it does not declare the capability.
@@ -106,19 +115,21 @@ export function Sim() {
       void session.current?.close();
       session.current = undefined;
     };
-  }, [ready, state.salonId, sessionNonce, protocol, replay]);
+  }, [ready, state.salonId, sessionNonce, protocol, replay, inTab]);
 
   useEffect(() => {
-    if (!ready || replay || !DIARY_URL) return;
+    if (!ready || replay || (!inTab && !DIARY_URL)) return;
     let alive = true;
     const epoch = Date.now() + 1; // its own id space in the traffic panel
-    openSession({
+    (inTab ? inTabServers().then((s) => s.diary()) : Promise.resolve(undefined))
+      .then((transport) => openSession({
+      transport,
       url: DIARY_URL,
       token: "",
       elicitation: false,
       onTraffic: (direction, message) => alive && dispatch({ type: "traffic", event: { direction, message, epoch, at: Date.now() } }),
       onElicit: async () => ({ action: "cancel" }),
-    })
+    }))
       .then((live) => {
         if (!alive) return void live.close();
         diary.current = live;
@@ -134,18 +145,24 @@ export function Sim() {
       diary.current = undefined;
       setDiaryUp(false);
     };
-  }, [ready, replay]); // "New session" restarts the Formula Book session only
+  }, [ready, replay, inTab]); // "New session" restarts the Formula Book session only
 
   const planSource = useMemo<PlanSource | undefined>(
     () =>
-      replay && fixture
+      inTab
+        ? {
+            usage: async (token) => ({ ...(await inTabServers()).usage(token), price: "Hypothesis, payments not live" }),
+            waitlist: async () => replayWaitlist(IN_TAB_STORE_LABEL),
+            join: async (email) => replayJoin(email, IN_TAB_STORE_LABEL),
+          }
+        : replay && fixture
         ? {
             usage: async (token) => replayUsage(fixture, token),
             waitlist: async () => replayWaitlist(),
             join: async (email) => replayJoin(email),
           }
         : undefined,
-    [replay, fixture],
+    [replay, fixture, inTab],
   );
 
   const handle = useCallback((out: Interpreted, tool: string, args: Record<string, unknown>, toolResult: unknown) => {
@@ -272,7 +289,7 @@ export function Sim() {
     <div className="min-h-screen">
       <TopBar
         state={state}
-        replay={replay}
+        mode={inTab ? "in-tab" : replay ? "replay" : "live"}
         diary={diaryUp}
         onSalon={(salonId) => dispatch({ type: "salon", salonId })}
         onNewSession={() => setSessionNonce((n) => n + 1)}
@@ -289,7 +306,10 @@ export function Sim() {
           <button
             data-testid="switch-to-replay"
             className="mt-2 min-h-11 rounded border border-[var(--ink)] px-3 text-[var(--ink)]"
-            onClick={() => setReplay(true)}
+            onClick={() => {
+              setInTab(false);
+              setReplay(true);
+            }}
           >
             Switch to replay
           </button>
