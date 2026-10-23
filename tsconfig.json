@@ -12,5 +12,5 @@
     "noEmit": true,
     "types": ["node"]
   },
-  "include": ["packages/*/src", "packages/*/test", "apps/mcp-server/src", "apps/mcp-server/test"]
+  "include": ["packages/*/src", "packages/*/test", "apps/mcp-server/src", "apps/mcp-server/test", "apps/diary-server/src", "apps/diary-server/test"]
 }

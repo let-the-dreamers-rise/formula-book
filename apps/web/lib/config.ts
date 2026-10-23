@@ -6,6 +6,9 @@ export interface SalonOption {
 
 export const MCP_URL = process.env.NEXT_PUBLIC_MCP_URL || "http://127.0.0.1:8787/mcp";
 
+/** The second MCP server, the salon's appointment diary. Unset: the sim connects to Formula Book only. */
+export const DIARY_URL = process.env.NEXT_PUBLIC_DIARY_URL || "";
+
 /** Hosted builds with no MCP server set NEXT_PUBLIC_MODE=replay; ?replay=1 does the same per visit. */
 export const REPLAY_BY_DEFAULT = process.env.NEXT_PUBLIC_MODE?.trim() === "replay";
 

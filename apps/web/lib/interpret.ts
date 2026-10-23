@@ -30,6 +30,7 @@ export type Interpreted =
   | { readonly kind: "choice"; readonly text: string; readonly question: string; readonly options: readonly string[]; readonly tool: string }
   | { readonly kind: "refusal"; readonly text: string; readonly usage?: Usage }
   | { readonly kind: "cancelled"; readonly text: string }
+  | { readonly kind: "info"; readonly text: string }
   | { readonly kind: "error"; readonly text: string };
 
 interface RawResult {
@@ -81,6 +82,8 @@ export function interpretResult(result: RawResult): Interpreted {
       return { kind: "refusal", text, usage: data.usage };
     case "cancelled":
       return { kind: "cancelled", text };
+    case "info": // a result with no formula, such as the diary's list of appointments
+      return { kind: "info", text };
     default:
       return { kind: "error", text: text || "The server returned a result the simulator does not know." };
   }

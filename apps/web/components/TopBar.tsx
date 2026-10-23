@@ -15,6 +15,8 @@ interface ChooserControl {
 export function TopBar(props: {
   state: SimState;
   replay: boolean;
+  /** True when the second MCP server, the salon diary, is connected too. */
+  diary?: boolean;
   onSalon: (id: string) => void;
   onNewSession: () => void;
   chooser: ChooserControl;
@@ -49,6 +51,11 @@ export function TopBar(props: {
       <span data-testid="server-status" className="rounded bg-white px-2 py-1 text-sm">
         {STATUS_TEXT[state.status]}
       </span>
+      {props.diary && (
+        <span data-testid="diary-status" className="rounded bg-white px-2 py-1 text-sm">
+          + Salon diary server
+        </span>
+      )}
       <label className="ml-auto flex items-center gap-2 text-sm">
         Salon
         <select

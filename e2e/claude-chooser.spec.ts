@@ -24,6 +24,24 @@ test("Claude picks the tool from the server's list for a phrasing the rule parse
   await expect(lastRow(page)).toContainText("scale_formula");
 });
 
+// Two MCP servers: Claude reads the salon diary, then gets each booked client's formula from Formula Book.
+test("Claude works across the diary server and Formula Book in one request", async ({ page, request }) => {
+  const status = (await (await request.get("/api/choose")).json()) as { available: boolean; label: string };
+  test.skip(!status.available, "No ANTHROPIC_API_KEY on the web server");
+  await resetDemo(page);
+  await openSim(page);
+  await expect(page.getByTestId("diary-status")).toBeVisible({ timeout: 30_000 });
+  await page.getByTestId("chooser-select").selectOption("claude");
+
+  await page.getByTestId("utterance-input").fill("Who's booked in today? Get their bowls ready");
+  await page.getByTestId("utterance-send").click();
+  await expect(page.locator('[data-testid="traffic-row"][data-method="tools/call"]', { hasText: "list_appointments" })).toHaveCount(1, { timeout: 30_000 });
+  await expect(page.locator('[data-testid="traffic-row"][data-method="tools/call"]', { hasText: "get_last_formula" }).first()).toBeVisible({ timeout: 30_000 });
+  await expect(page.locator("body")).toContainText("Lena Okafor: 40 grams 5N", { timeout: 30_000 });
+  await expect(page.getByTestId("spoken-reply")).not.toBeEmpty();
+  await expect(page.getByTestId("chooser-badge")).toHaveText(status.label);
+});
+
 // One sentence, two clients: Claude plans one call per client and the host runs them in order.
 test("Claude plans one call per client from one sentence", async ({ page, request }) => {
   const status = (await (await request.get("/api/choose")).json()) as { available: boolean; label: string };

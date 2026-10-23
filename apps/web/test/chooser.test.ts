@@ -21,6 +21,14 @@ describe("building the chooser request", () => {
     expect(request.messages).toEqual([{ role: "user", content: "Lena has thick hair today, go for twice the amount" }]);
   });
 
+  it("replays earlier rounds as tool_use and tool_result turns", () => {
+    const history = [{ calls: [{ id: "t1", name: "list_appointments", input: { day: "today" } }], results: [{ id: "t1", content: "Booked today: 14:00 Lena." }] }];
+    const withHistory = buildChooserRequest({ utterance: "Who's in? Get their bowls ready", tools, history });
+    expect(withHistory.messages).toHaveLength(3);
+    expect(withHistory.messages[1]).toEqual({ role: "assistant", content: [{ type: "tool_use", id: "t1", name: "list_appointments", input: { day: "today" } }] });
+    expect(withHistory.messages[2]).toEqual({ role: "user", content: [{ type: "tool_result", tool_use_id: "t1", content: "Booked today: 14:00 Lena." }] });
+  });
+
   it("says when no client has been discussed", () => {
     expect(buildChooserRequest({ utterance: "hi", tools }).system).toContain("No client has been discussed yet");
   });

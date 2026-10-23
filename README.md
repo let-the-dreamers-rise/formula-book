@@ -31,6 +31,8 @@ Related work: `alexa-plus-sim`, an Echo-Show-style simulator with a Bedrock tool
 | Choosing the tool | Two choosers, and the badge always names the one that ran. Default: a rule parser (`apps/web/lib/rule-parser.ts`), no model call. Optional: Claude Haiku 5.5 picks one tool and its arguments from the server's own `tools/list`, as a host's model would (`apps/web/lib/chooser.ts`, called server-side from `app/api/choose`). It appears only when the web server has `ANTHROPIC_API_KEY` |
 | Voice in | Chrome's Web Speech API. Chrome may send the audio to its vendor's speech service. Accuracy on shade codes is not measured; the text box always works |
 | Voice out | The browser's `speechSynthesis` reading the server's sentence. Not Alexa's voice |
+| Second MCP server: the salon diary (`apps/diary-server`), one read-only tool `list_appointments` | Real server, **demo appointments**. With the Claude chooser, "Who's booked in today? Get their bowls ready" reads the diary, then gets each booked client's formula from Formula Book, then Claude says one closing sentence: a loop of up to three rounds, each result fed back to Claude (`apps/web/lib/claude-loop.ts`). Rohan is booked with no formula on file, so the loop shows a refusal too |
+| Several clients in one sentence | With Claude: up to three calls per round, run in order, all or nothing (`parseChooserPlan`) |
 | Free plan of 50 formulas | Real: the server refuses the 51st save |
 | Price | "Hypothesis, payments not live". Nobody is charged |
 | Waitlist | A local JSON file ("Local demo store") in `DATA_DIR`. No public signup count is claimed |
@@ -88,7 +90,7 @@ npm run dev:all
 
 Open http://localhost:3000/sim for the simulated Alexa+ demo, or http://localhost:3000/site/index.html for the product site (static HTML, CSS and GSAP in `apps/web/public/site`). Try "Lena's last formula", then "Make it one and a half times", then "Colour Marta: 30 grams 6N and 20 grams 7.1, 20 volume, one to one and a half".
 
-The MCP endpoint is `http://127.0.0.1:8787/mcp`. Two public demo tokens guard demo data only: `demo-salon-token` and `booth12-token` (send `Authorization: Bearer <token>`). Set `SALON_TOKENS` for your own.
+`dev:all` also starts the salon diary MCP server at `http://127.0.0.1:8790/mcp` (stateless, demo data); the sim connects to both and shows "+ Salon diary server". The MCP endpoint is `http://127.0.0.1:8787/mcp`. Two public demo tokens guard demo data only: `demo-salon-token` and `booth12-token` (send `Authorization: Bearer <token>`). Set `SALON_TOKENS` for your own.
 
 | Variable | Default | Meaning |
 |---|---|---|
@@ -101,6 +103,7 @@ The MCP endpoint is `http://127.0.0.1:8787/mcp`. Two public demo tokens guard de
 | `E2E` | off | `1` enables the test-only tool delay |
 | `ANTHROPIC_API_KEY` | unset | Web app only. Enables the Claude chooser. Read on the server, never sent to the browser. About 700 input tokens per choice; 30 calls a minute at most |
 | `CHOOSER` | on when a key is set | `off` hides the Claude chooser even with a key |
+| `DIARY_PORT` | 8790 | Diary server port (`NEXT_PUBLIC_DIARY_URL` tells the web app where it is; unset, the sim uses Formula Book only) |
 | `NEXT_PUBLIC_MODE` | unset | Web app only. `replay` opens the sim in Replay mode (the hosted build uses this) |
 
 ### Replay mode

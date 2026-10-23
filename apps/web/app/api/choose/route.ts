@@ -1,11 +1,22 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
-import { buildChooserRequest, CHOOSER_LABEL, parseChooserPlan, type ChooserReply, type ToolDef } from "@/lib/chooser";
+import {
+  buildChooserRequest,
+  CHOOSER_LABEL,
+  MAX_ROUNDS,
+  MAX_STEPS,
+  parseChooserPlan,
+  type ChooserReply,
+  type ChooserRound,
+  type ToolDef,
+} from "@/lib/chooser";
 
 // Server only: the key comes from ANTHROPIC_API_KEY and never reaches the browser.
 // CHOOSER=off hides the model chooser even when a key is set.
 const MAX_UTTERANCE = 500;
 const MAX_TOOLS = 10;
+const MAX_RESULT = 4_000;
+const MAX_ID = 100;
 const LIMIT_PER_MINUTE = 30;
 const calls: number[] = [];
 
@@ -20,15 +31,38 @@ function overLimit(now: number): boolean {
   return false;
 }
 
-function parseBody(body: unknown): { utterance: string; lastClient?: string; tools: ToolDef[] } | undefined {
-  const b = body as { utterance?: unknown; lastClient?: unknown; tools?: unknown };
+const isId = (v: unknown): v is string => typeof v === "string" && v.length > 0 && v.length <= MAX_ID;
+const isObject = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
+
+/** Earlier rounds the host ran for this sentence; anything malformed rejects the whole request. */
+function parseHistory(value: unknown): ChooserRound[] | undefined {
+  if (value === undefined) return [];
+  if (!Array.isArray(value) || value.length > MAX_ROUNDS) return undefined;
+  const rounds = value.map((r: { calls?: unknown; results?: unknown }) => {
+    const calls = Array.isArray(r?.calls) ? r.calls : [];
+    const results = Array.isArray(r?.results) ? r.results : [];
+    const ok =
+      calls.length > 0 &&
+      calls.length <= MAX_STEPS &&
+      results.length === calls.length &&
+      calls.every((c: { id?: unknown; name?: unknown; input?: unknown }) => isId(c?.id) && typeof c?.name === "string" && isObject(c?.input)) &&
+      results.every((x: { id?: unknown; content?: unknown }) => isId(x?.id) && typeof x?.content === "string" && x.content.length <= MAX_RESULT);
+    return ok ? ({ calls, results } as ChooserRound) : undefined;
+  });
+  return rounds.every((r): r is ChooserRound => r !== undefined) ? rounds : undefined;
+}
+
+function parseBody(body: unknown): { utterance: string; lastClient?: string; tools: ToolDef[]; history: ChooserRound[] } | undefined {
+  const b = body as { utterance?: unknown; lastClient?: unknown; tools?: unknown; history?: unknown };
   if (typeof b?.utterance !== "string" || !b.utterance.trim() || b.utterance.length > MAX_UTTERANCE) return undefined;
   if (!Array.isArray(b.tools) || b.tools.length === 0 || b.tools.length > MAX_TOOLS) return undefined;
   const tools = b.tools.filter(
     (t): t is ToolDef => typeof t?.name === "string" && typeof t?.inputSchema === "object" && t.inputSchema !== null,
   );
   if (tools.length !== b.tools.length) return undefined;
-  return { utterance: b.utterance.trim(), lastClient: typeof b.lastClient === "string" ? b.lastClient : undefined, tools };
+  const history = parseHistory(b.history);
+  if (!history) return undefined;
+  return { utterance: b.utterance.trim(), lastClient: typeof b.lastClient === "string" ? b.lastClient : undefined, tools, history };
 }
 
 const fail = (status: number, error: string) => NextResponse.json({ ok: false, error }, { status });

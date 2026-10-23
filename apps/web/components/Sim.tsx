@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import type { ElicitResult } from "@modelcontextprotocol/sdk/types.js";
-import { MCP_URL, REPLAY_BY_DEFAULT, SALONS } from "@/lib/config";
+import { DIARY_URL, MCP_URL, REPLAY_BY_DEFAULT, SALONS } from "@/lib/config";
+import { runClaudeLoop } from "@/lib/claude-loop";
 import { replayJoin, replayUsage, replayWaitlist } from "@/lib/plan-replay";
 import type { ReplayFixture } from "@/lib/replay-fixture";
 import { cardUri, invokingText } from "@/lib/devices";
@@ -46,6 +47,9 @@ export function Sim() {
   const [replay, setReplay] = useState(false);
   const [fixture, setFixture] = useState<ReplayFixture | undefined>(undefined);
   const session = useRef<LiveSession | undefined>(undefined);
+  // The second MCP server, the salon's diary; only Claude's loop uses its tool.
+  const diary = useRef<LiveSession | undefined>(undefined);
+  const [diaryUp, setDiaryUp] = useState(false);
   const pick = useRef<Pick | undefined>(undefined);
   const latest = useRef(state);
   latest.current = state;
@@ -104,6 +108,34 @@ export function Sim() {
     };
   }, [ready, state.salonId, sessionNonce, protocol, replay]);
 
+  useEffect(() => {
+    if (!ready || replay || !DIARY_URL) return;
+    let alive = true;
+    const epoch = Date.now() + 1; // its own id space in the traffic panel
+    openSession({
+      url: DIARY_URL,
+      token: "",
+      elicitation: false,
+      onTraffic: (direction, message) => alive && dispatch({ type: "traffic", event: { direction, message, epoch, at: Date.now() } }),
+      onElicit: async () => ({ action: "cancel" }),
+    })
+      .then((live) => {
+        if (!alive) return void live.close();
+        diary.current = live;
+        setDiaryUp(true);
+      })
+      .catch((error: unknown) => {
+        const why = error instanceof Error ? error.message : String(error);
+        if (alive) dispatch({ type: "toolsWarning", warning: `The salon diary server is not reachable (${why}). Formula Book still works.` });
+      });
+    return () => {
+      alive = false;
+      void diary.current?.close();
+      diary.current = undefined;
+      setDiaryUp(false);
+    };
+  }, [ready, replay]); // "New session" restarts the Formula Book session only
+
   const planSource = useMemo<PlanSource | undefined>(
     () =>
       replay && fixture
@@ -144,19 +176,22 @@ export function Sim() {
   }, []);
 
   const run = useCallback(
-    async (tool: string, args: Record<string, unknown>) => {
-      const live = session.current;
+    async (tool: string, args: Record<string, unknown>): Promise<unknown> => {
+      const onDiary = diary.current?.tools?.includes(tool) ?? false;
+      const live = onDiary ? diary.current : session.current;
       if (!live) {
         dispatch({ type: "failed", error: "The Formula Book server is not reachable." });
-        return;
+        return undefined;
       }
       dispatch({ type: "busy", busy: true, invoking: invokingText(live.toolMeta, tool) });
       try {
         const result = await live.client.callTool({ name: tool, arguments: args });
-        await loadCard(live, cardUri(result));
+        if (!onDiary) await loadCard(live, cardUri(result));
         handle(interpretResult(result as Parameters<typeof interpretResult>[0]), tool, args, result);
+        return result;
       } catch (error) {
         dispatch({ type: "failed", error: error instanceof Error ? error.message : String(error) });
+        return undefined;
       } finally {
         dispatch({ type: "busy", busy: false });
       }
@@ -164,43 +199,59 @@ export function Sim() {
     [handle, loadCard],
   );
 
+  // Only tools a connected server listed may run.
+  const runOffered = useCallback(
+    async (tool: string, args: Record<string, unknown>): Promise<unknown> => {
+      const offered = [...(session.current?.tools ?? []), ...(diary.current?.tools ?? [])];
+      if (session.current?.tools && !offered.includes(tool)) {
+        dispatch({ type: "failed", error: `No connected server offers the ${tool} tool.` });
+        return undefined;
+      }
+      return run(tool, args);
+    },
+    [run],
+  );
+
   // The badge always names the chooser that actually ran; a failed Claude call is shown, never hidden.
-  const pickTools = useCallback(async (text: string): Promise<readonly ToolChoice[] | undefined> => {
-    const lastClient = latest.current.lastClient;
-    const defs = session.current?.toolDefs;
-    if (chooserRef.current !== "claude" || !defs?.length) {
-      setRanWith("Rule parser");
-      return [parseUtterance(text, { lastClient })];
-    }
-    dispatch({ type: "busy", busy: true, invoking: "Choosing tools" });
-    try {
-      const plan = await chooseWithClaude(text, lastClient, defs);
-      setRanWith(claude.label || "Claude");
-      return plan;
-    } catch (error) {
-      dispatch({ type: "failed", error: error instanceof Error ? error.message : String(error) });
-      return undefined;
-    } finally {
-      dispatch({ type: "busy", busy: false });
-    }
-  }, [claude.label]);
+  const askClaude = useCallback(
+    (text: string) => {
+      const defs = [...(session.current?.toolDefs ?? []), ...(diary.current?.toolDefs ?? [])];
+      return runClaudeLoop({
+        choose: async (history) => {
+          dispatch({ type: "busy", busy: true, invoking: history.length ? "Planning the next step" : "Choosing tools" });
+          try {
+            const plan = await chooseWithClaude(text, latest.current.lastClient, defs, history);
+            setRanWith(claude.label || "Claude");
+            return plan;
+          } catch (error) {
+            dispatch({ type: "failed", error: error instanceof Error ? error.message : String(error) });
+            return [];
+          } finally {
+            dispatch({ type: "busy", busy: false });
+          }
+        },
+        call: runOffered,
+        say: (words) => dispatch({ type: "reply", text: words }),
+      });
+    },
+    [claude.label, runOffered],
+  );
 
   const send = useCallback(
     async (utterance: string) => {
       const text = utterance.trim();
       if (!text || latest.current.busy) return;
       dispatch({ type: "user", text });
-      const plan = await pickTools(text);
-      // One sentence may be several calls (Claude, for several clients at once); they run in order.
-      for (const choice of plan ?? []) {
-        if (choice.tool === null) dispatch({ type: "reply", text: choice.reason });
-        else if (session.current?.tools && !session.current.tools.includes(choice.tool)) {
-          dispatch({ type: "failed", error: `The server does not offer the ${choice.tool} tool.` });
-          return;
-        } else await run(choice.tool, { ...choice.arguments });
+      if (chooserRef.current === "claude" && session.current?.toolDefs?.length) {
+        await askClaude(text);
+        return;
       }
+      setRanWith("Rule parser");
+      const choice = parseUtterance(text, { lastClient: latest.current.lastClient });
+      if (choice.tool === null) dispatch({ type: "reply", text: choice.reason });
+      else await runOffered(choice.tool, { ...choice.arguments });
     },
-    [run, pickTools],
+    [askClaude, runOffered],
   );
 
   // Speak each new reply; the turn count changes even when two replies have the same words.
@@ -222,6 +273,7 @@ export function Sim() {
       <TopBar
         state={state}
         replay={replay}
+        diary={diaryUp}
         onSalon={(salonId) => dispatch({ type: "salon", salonId })}
         onNewSession={() => setSessionNonce((n) => n + 1)}
         chooser={{ value: chooser, ranWith, claudeLabel: claude.available ? claude.label : undefined, onChange: setChooser }}
