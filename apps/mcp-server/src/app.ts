@@ -10,6 +10,9 @@ import type { Config } from "./config.ts";
 import { loadSeeds } from "./seed.ts";
 import type { Store } from "./store.ts";
 import { registerTools } from "./tools.ts";
+import { joinWaitlist, readWaitlist, validEmail, WAITLIST_STORE_LABEL } from "./waitlist.ts";
+
+export const PLAN_PRICE = "Hypothesis, payments not live";
 
 export const SERVER_INFO = { name: "formula-book", version: "0.1.0" } as const;
 
@@ -87,6 +90,10 @@ export function createApp(config: Config, store: Store) {
     }),
   );
   app.use(express.json({ limit: "100kb" }));
+  app.use((_req, res, next) => {
+    sendChunked(res);
+    next();
+  });
 
   app.get("/healthz", (_req, res) => {
     res.json({ ok: true, ...SERVER_INFO, protocol: LATEST_PROTOCOL_VERSION });
@@ -124,6 +131,23 @@ export function createApp(config: Config, store: Store) {
     next();
   }
 
+  // Plan panel: the salon's usage against the free cap, and the local waitlist.
+  app.get("/plan/usage", auth, (_req, res) => {
+    const salon = store.getSalon(res.locals.salonId as string);
+    res.json({ count: salon?.formulas.length ?? 0, cap: config.cap, price: PLAN_PRICE });
+  });
+  app.get("/plan/waitlist", (_req, res) => {
+    res.json({ count: readWaitlist(config.dataDir).length, store: WAITLIST_STORE_LABEL });
+  });
+  app.post("/plan/waitlist", (req, res) => {
+    const email = validEmail(req.body?.email);
+    if (!email) {
+      res.status(400).json({ ok: false, error: "Enter an email address, for example name@salon.com." });
+      return;
+    }
+    res.json({ ok: true, count: joinWaitlist(config.dataDir, email).length, store: WAITLIST_STORE_LABEL });
+  });
+
   function existing(req: Request, res: Response): Session | undefined {
     const id = req.header("mcp-session-id");
     const session = id ? sessions.get(id) : undefined;
@@ -139,7 +163,6 @@ export function createApp(config: Config, store: Store) {
   }
 
   app.post(config.mcpPath, auth, async (req, res) => {
-    sendChunked(res);
     if (req.header("mcp-session-id")) {
       const session = existing(req, res);
       if (session) await session.transport.handleRequest(req, res, req.body);

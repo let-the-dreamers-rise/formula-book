@@ -3,8 +3,9 @@
 import { useState } from "react";
 import { SUGGESTIONS } from "@/lib/config";
 import type { SimState } from "@/lib/sim-state";
+import { MicButton } from "./MicButton";
 
-export function Conversation(props: { state: SimState; onSend: (text: string) => void }) {
+export function Conversation(props: { state: SimState; onSend: (text: string) => void; onVoiceError: (message: string) => void }) {
   const { state } = props;
   const [draft, setDraft] = useState("");
   const submit = () => {
@@ -64,6 +65,7 @@ export function Conversation(props: { state: SimState; onSend: (text: string) =>
           placeholder="Lena's last formula"
           autoComplete="off"
         />
+        <MicButton disabled={state.busy || state.status !== "connected"} onText={props.onSend} onError={props.onVoiceError} />
         <button
           data-testid="utterance-send"
           type="submit"

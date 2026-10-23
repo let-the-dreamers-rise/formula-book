@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { card, lastRow, openSim, resetDemo, rows, say, tap } from "./sim";
 
-// Golden path, spec section 3, steps 1 to 8 (steps 9 and 10, the plan panel and waitlist, arrive in M4).
+// Golden path, spec section 3, steps 1 to 10.
 // Every card assertion is made inside the MCP Apps iframe.
 test.beforeEach(async ({ page }) => resetDemo(page));
 
@@ -84,4 +84,24 @@ test("golden path: recall, scale, save, new session, elicitation, refusal, three
   await say(page, "Make it one and a half times");
   await expect(reply).toContainText("150 grams");
   await expect(page.getByTestId("widget-frame")).toHaveCount(0);
+
+  // 9. The capped salon: the server refuses the 51st formula and the meter does not move.
+  await tap(page, "device-echo-show-8");
+  await page.getByTestId("salon-select").selectOption({ label: "Booth 12 (capped)" });
+  await expect(page.getByTestId("server-status")).toHaveText("Connected", { timeout: 30_000 });
+  await expect(page.getByTestId("usage-count")).toHaveText("50 of 50");
+  await expect(page.getByTestId("waitlist-store-label")).toHaveText("Local demo store");
+  await expect(page.getByTestId("plan-price")).toHaveText("Hypothesis, payments not live");
+  await say(page, "Colour Ines: 30 grams 6N, 20 volume, one to one");
+  await expect(reply).toContainText("free plan holds 50 formulas");
+  await expect(page.getByTestId("usage-count")).toHaveText("50 of 50");
+  await expect(page.getByTestId("widget-frame")).toHaveCount(0);
+
+  // 10. The waitlist, written to the local demo store only.
+  await expect(page.getByTestId("waitlist-count")).toHaveText("0");
+  await page.getByTestId("waitlist-email").fill("test@example.invalid");
+  await tap(page, "waitlist-submit");
+  await expect(page.getByTestId("waitlist-success")).toBeVisible();
+  await expect(page.getByTestId("waitlist-count")).toHaveText("1");
+  await expect(page.getByTestId("waitlist-store-label")).toHaveText("Local demo store");
 });

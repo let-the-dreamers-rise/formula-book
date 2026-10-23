@@ -8,9 +8,11 @@ import { interpretResult, type Interpreted } from "@/lib/interpret";
 import { parseUtterance } from "@/lib/rule-parser";
 import { openSession, type LiveSession } from "@/lib/session";
 import { initialState, reduce } from "@/lib/sim-state";
+import { speak } from "@/lib/voice";
 import { ChoiceDialog } from "./ChoiceDialog";
 import { Conversation } from "./Conversation";
 import { DeviceStage } from "./DeviceStage";
+import { PlanPanel } from "./PlanPanel";
 import { ResultJson } from "./ResultJson";
 import { TopBar } from "./TopBar";
 import { TrafficPanel } from "./TrafficPanel";
@@ -135,6 +137,13 @@ export function Sim() {
     [run],
   );
 
+  // Speak each new reply; the turn count changes even when two replies have the same words.
+  const [voiceOut, setVoiceOut] = useState(true);
+  const replies = state.turns.filter((t) => t.role === "assistant").length;
+  useEffect(() => {
+    if (voiceOut && replies > 0) speak(latest.current.spoken);
+  }, [replies, voiceOut]);
+
   const choose = (name: string | null) => {
     const resolve = pick.current;
     pick.current = undefined;
@@ -170,9 +179,23 @@ export function Sim() {
       <main className="grid gap-4 p-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <section className="flex flex-col gap-4">
           <DeviceStage state={state} onDevice={(device) => dispatch({ type: "device", device })} />
-          <Conversation state={state} onSend={send} />
+          <Conversation state={state} onSend={send} onVoiceError={(message) => dispatch({ type: "reply", text: message })} />
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              data-testid="speak-toggle"
+              type="checkbox"
+              className="size-5"
+              checked={voiceOut}
+              onChange={(e) => setVoiceOut(e.target.checked)}
+            />
+            Speak replies aloud (browser voice, not Alexa)
+          </label>
         </section>
         <section className="flex flex-col gap-4">
+          <PlanPanel
+            token={SALONS.find((s) => s.id === state.salonId)?.token ?? ""}
+            refreshKey={`${state.salonId}:${state.status}:${state.turns.length}`}
+          />
           <TrafficPanel rows={state.traffic} />
           <label className="flex items-center gap-2 text-sm">
             <input
