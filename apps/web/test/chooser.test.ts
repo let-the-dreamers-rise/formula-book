@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildChooserRequest, CHOOSER_MODEL, parseChooserReply, type ToolDef } from "../lib/chooser.ts";
+import { buildChooserRequest, CHOOSER_MODEL, MAX_STEPS, parseChooserPlan, parseChooserReply, type ToolDef } from "../lib/chooser.ts";
 
 const tools: ToolDef[] = [
   { name: "get_last_formula", description: "Get a client's last formula.", inputSchema: { type: "object", properties: { client_name: { type: "string" } } } },
@@ -47,6 +47,42 @@ describe("reading the model's reply", () => {
   it("refuses arguments that are not an object", () => {
     const reply = { stop_reason: "tool_use", content: [{ type: "tool_use", name: "scale_formula", input: "twice" }] };
     expect(parseChooserReply(reply, names)).toMatchObject({ tool: null });
+  });
+
+  it("plans one call per client when the colourist asks about several at once", () => {
+    const reply = {
+      stop_reason: "tool_use",
+      content: [
+        { type: "text", text: "Both bowls." },
+        { type: "tool_use", name: "scale_formula", input: { client_name: "Lena", factor: 1.5 } },
+        { type: "tool_use", name: "scale_formula", input: { client_name: "Priya Shah", factor: 1.5 } },
+      ],
+    };
+    expect(parseChooserPlan(reply, names)).toEqual([
+      { tool: "scale_formula", arguments: { client_name: "Lena", factor: 1.5 } },
+      { tool: "scale_formula", arguments: { client_name: "Priya Shah", factor: 1.5 } },
+    ]);
+  });
+
+  it("runs nothing when one planned call is not offered", () => {
+    const reply = {
+      stop_reason: "tool_use",
+      content: [
+        { type: "tool_use", name: "scale_formula", input: { client_name: "Lena", factor: 1.5 } },
+        { type: "tool_use", name: "delete_everything", input: {} },
+      ],
+    };
+    expect(parseChooserPlan(reply, names)).toEqual([expect.objectContaining({ tool: null })]);
+  });
+
+  it(`refuses more than ${MAX_STEPS} calls from one sentence`, () => {
+    const one = { type: "tool_use", name: "get_last_formula", input: { client_name: "Lena" } };
+    const reply = { stop_reason: "tool_use", content: Array.from({ length: MAX_STEPS + 1 }, () => one) };
+    expect(parseChooserPlan(reply, names)).toEqual([expect.objectContaining({ tool: null, reason: expect.stringContaining("more than") })]);
+  });
+
+  it("asks the model for one call per client, up to the limit", () => {
+    expect(buildChooserRequest({ utterance: "x", tools }).system).toContain(`at most ${MAX_STEPS}`);
   });
 
   it("treats a cut-off reply as no choice", () => {

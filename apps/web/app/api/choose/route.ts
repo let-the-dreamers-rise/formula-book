@@ -1,6 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
-import { buildChooserRequest, CHOOSER_LABEL, parseChooserReply, type ChooserReply, type ToolDef } from "@/lib/chooser";
+import { buildChooserRequest, CHOOSER_LABEL, parseChooserPlan, type ChooserReply, type ToolDef } from "@/lib/chooser";
 
 // Server only: the key comes from ANTHROPIC_API_KEY and never reaches the browser.
 // CHOOSER=off hides the model chooser even when a key is set.
@@ -47,8 +47,8 @@ export async function POST(request: Request) {
     // Tool schemas come from the MCP server's tools/list (JSON Schema objects), so the cast is to the SDK's type for them.
     const params = buildChooserRequest(input) as unknown as Anthropic.MessageCreateParamsNonStreaming;
     const reply = await client.messages.create(params);
-    const choice = parseChooserReply(reply as unknown as ChooserReply, input.tools.map((t) => t.name));
-    return NextResponse.json({ ok: true, choice, label: CHOOSER_LABEL, usage: reply.usage });
+    const plan = parseChooserPlan(reply as unknown as ChooserReply, input.tools.map((t) => t.name));
+    return NextResponse.json({ ok: true, choice: plan[0], plan, label: CHOOSER_LABEL, usage: reply.usage });
   } catch (error) {
     const status = error instanceof Anthropic.APIError ? (error.status ?? 502) : 502;
     console.error("Claude chooser failed:", status, error instanceof Error ? error.message : String(error));

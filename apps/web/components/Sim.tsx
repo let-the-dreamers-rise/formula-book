@@ -165,18 +165,18 @@ export function Sim() {
   );
 
   // The badge always names the chooser that actually ran; a failed Claude call is shown, never hidden.
-  const pickTool = useCallback(async (text: string): Promise<ToolChoice | undefined> => {
+  const pickTools = useCallback(async (text: string): Promise<readonly ToolChoice[] | undefined> => {
     const lastClient = latest.current.lastClient;
     const defs = session.current?.toolDefs;
     if (chooserRef.current !== "claude" || !defs?.length) {
       setRanWith("Rule parser");
-      return parseUtterance(text, { lastClient });
+      return [parseUtterance(text, { lastClient })];
     }
-    dispatch({ type: "busy", busy: true, invoking: "Choosing a tool" });
+    dispatch({ type: "busy", busy: true, invoking: "Choosing tools" });
     try {
-      const choice = await chooseWithClaude(text, lastClient, defs);
+      const plan = await chooseWithClaude(text, lastClient, defs);
       setRanWith(claude.label || "Claude");
-      return choice;
+      return plan;
     } catch (error) {
       dispatch({ type: "failed", error: error instanceof Error ? error.message : String(error) });
       return undefined;
@@ -190,14 +190,17 @@ export function Sim() {
       const text = utterance.trim();
       if (!text || latest.current.busy) return;
       dispatch({ type: "user", text });
-      const choice = await pickTool(text);
-      if (!choice) return;
-      if (choice.tool === null) dispatch({ type: "reply", text: choice.reason });
-      else if (session.current?.tools && !session.current.tools.includes(choice.tool)) {
-        dispatch({ type: "failed", error: `The server does not offer the ${choice.tool} tool.` });
-      } else await run(choice.tool, { ...choice.arguments });
+      const plan = await pickTools(text);
+      // One sentence may be several calls (Claude, for several clients at once); they run in order.
+      for (const choice of plan ?? []) {
+        if (choice.tool === null) dispatch({ type: "reply", text: choice.reason });
+        else if (session.current?.tools && !session.current.tools.includes(choice.tool)) {
+          dispatch({ type: "failed", error: `The server does not offer the ${choice.tool} tool.` });
+          return;
+        } else await run(choice.tool, { ...choice.arguments });
+      }
     },
-    [run, pickTool],
+    [run, pickTools],
   );
 
   // Speak each new reply; the turn count changes even when two replies have the same words.

@@ -4,7 +4,9 @@ import type { ToolChoice, ToolName } from "./rule-parser";
 
 export const CHOOSER_MODEL = "claude-haiku-5-5";
 export const CHOOSER_LABEL = "Claude Haiku 5.5";
-const MAX_TOKENS = 400;
+const MAX_TOKENS = 600;
+/** Most tool calls one sentence may turn into, for example three bowls to prepare at once. */
+export const MAX_STEPS = 3;
 
 export interface ToolDef {
   readonly name: string;
@@ -27,7 +29,8 @@ export function buildChooserRequest(input: ChooserInput) {
     max_tokens: MAX_TOKENS,
     system:
       "You are the tool chooser in a simulated voice assistant at a hair salon's colour bar. " +
-      "Pick at most one of the given tools for what the colourist just said, with arguments that follow its schema. " +
+      "Pick the tool calls needed for what the colourist just said, with arguments that follow each tool's schema. " +
+      `Usually that is one call. When they ask about several clients at once, make one call per client, at most ${MAX_STEPS}. ` +
       "Use client names as spoken. Put numbers as numbers: 'twice' is 2, 'one and a half times' is 1.5. " +
       "Never invent a formula the colourist did not say. If no tool fits, reply in one short sentence saying what you can do. " +
       about,
@@ -50,16 +53,31 @@ export interface ChooserReply {
 }
 
 const NO_CHOICE = "I did not understand that. Try a client's name, or ask to scale or save a formula.";
+const TOO_MANY = `That is more than ${MAX_STEPS} things at once. Ask for up to ${MAX_STEPS} clients.`;
 
-/** Accepts only a finished reply that names a tool the server offers, with object arguments. */
-export function parseChooserReply(reply: ChooserReply, toolNames: readonly string[]): ToolChoice {
-  if (reply.stop_reason === "max_tokens" || reply.stop_reason === "refusal") return { tool: null, reason: NO_CHOICE };
-  const use = reply.content.find((b) => b.type === "tool_use");
-  if (use) {
-    const args = use.input;
-    const valid = use.name !== undefined && toolNames.includes(use.name) && typeof args === "object" && args !== null && !Array.isArray(args);
-    return valid ? { tool: use.name as ToolName, arguments: args as Record<string, unknown> } : { tool: null, reason: NO_CHOICE };
+function validCall(block: ReplyBlock, toolNames: readonly string[]): ToolChoice | undefined {
+  const args = block.input;
+  const ok = block.name !== undefined && toolNames.includes(block.name) && typeof args === "object" && args !== null && !Array.isArray(args);
+  return ok ? { tool: block.name as ToolName, arguments: args as Record<string, unknown> } : undefined;
+}
+
+/**
+ * The calls to make, in the model's order. All or nothing: one call the server does not offer, or
+ * more than MAX_STEPS, and nothing runs. A finished reply with no call passes on the model's words.
+ */
+export function parseChooserPlan(reply: ChooserReply, toolNames: readonly string[]): readonly ToolChoice[] {
+  if (reply.stop_reason === "max_tokens" || reply.stop_reason === "refusal") return [{ tool: null, reason: NO_CHOICE }];
+  const uses = reply.content.filter((b) => b.type === "tool_use");
+  if (uses.length > MAX_STEPS) return [{ tool: null, reason: TOO_MANY }];
+  if (uses.length > 0) {
+    const calls = uses.map((b) => validCall(b, toolNames));
+    return calls.every((c): c is ToolChoice => c !== undefined) ? calls : [{ tool: null, reason: NO_CHOICE }];
   }
   const text = reply.content.filter((b) => b.type === "text").map((b) => b.text ?? "").join(" ").trim();
-  return { tool: null, reason: text || NO_CHOICE };
+  return [{ tool: null, reason: text || NO_CHOICE }];
+}
+
+/** The first step of the plan, for callers that take one tool. */
+export function parseChooserReply(reply: ChooserReply, toolNames: readonly string[]): ToolChoice {
+  return parseChooserPlan(reply, toolNames)[0] ?? { tool: null, reason: NO_CHOICE };
 }
