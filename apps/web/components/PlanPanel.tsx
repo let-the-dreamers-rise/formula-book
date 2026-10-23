@@ -2,31 +2,45 @@
 
 import { useEffect, useState } from "react";
 import { fetchUsage, fetchWaitlist, joinWaitlist, type PlanUsage, type WaitlistState } from "@/lib/plan";
+import type { Usage } from "@/lib/interpret";
+
+/** Where the panel reads usage and the waitlist: the server's REST routes, or replay's local copy. */
+export interface PlanSource {
+  readonly usage: (token: string) => Promise<PlanUsage>;
+  readonly waitlist: () => Promise<WaitlistState>;
+  readonly join: (email: string) => Promise<WaitlistState>;
+}
+
+const LIVE: PlanSource = { usage: fetchUsage, waitlist: fetchWaitlist, join: joinWaitlist };
 
 interface Props {
   readonly token: string;
   /** Changes after every tool call and salon switch, so the meter re-reads the server. */
   readonly refreshKey: string;
+  readonly source?: PlanSource;
+  /** The usage the last tool result reported, used over the source's figure when present. */
+  readonly reported?: Usage;
 }
 
-export function PlanPanel({ token, refreshKey }: Props) {
-  const [usage, setUsage] = useState<PlanUsage | undefined>(undefined);
+export function PlanPanel({ token, refreshKey, source = LIVE, reported }: Props) {
+  const [fetched, setUsage] = useState<PlanUsage | undefined>(undefined);
+  const usage = fetched && reported ? { ...fetched, count: reported.count, cap: reported.cap } : fetched;
   const [waitlist, setWaitlist] = useState<WaitlistState | undefined>(undefined);
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState<{ kind: "ok" | "error"; text: string } | undefined>(undefined);
 
   useEffect(() => {
     let alive = true;
-    fetchUsage(token).then((u) => alive && setUsage(u)).catch(() => alive && setUsage(undefined));
-    fetchWaitlist().then((w) => alive && setWaitlist(w)).catch(() => undefined);
+    source.usage(token).then((u) => alive && setUsage(u)).catch(() => alive && setUsage(undefined));
+    source.waitlist().then((w) => alive && setWaitlist(w)).catch(() => undefined);
     return () => {
       alive = false;
     };
-  }, [token, refreshKey]);
+  }, [token, refreshKey, source]);
 
   const submit = async () => {
     try {
-      setWaitlist(await joinWaitlist(email));
+      setWaitlist(await source.join(email));
       setMessage({ kind: "ok", text: "You are on the waitlist. No payment is taken." });
       setEmail("");
     } catch (error) {

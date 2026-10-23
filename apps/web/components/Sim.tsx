@@ -1,8 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useReducer, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import type { ElicitResult } from "@modelcontextprotocol/sdk/types.js";
-import { MCP_URL, SALONS } from "@/lib/config";
+import { MCP_URL, REPLAY_BY_DEFAULT, SALONS } from "@/lib/config";
+import { replayJoin, replayUsage, replayWaitlist } from "@/lib/plan-replay";
+import type { ReplayFixture } from "@/lib/replay-fixture";
 import { cardUri, invokingText } from "@/lib/devices";
 import { interpretResult, type Interpreted } from "@/lib/interpret";
 import { parseUtterance } from "@/lib/rule-parser";
@@ -16,7 +18,7 @@ export type ChooserId = "rules" | "claude";
 import { ChoiceDialog } from "./ChoiceDialog";
 import { Conversation } from "./Conversation";
 import { DeviceStage } from "./DeviceStage";
-import { PlanPanel } from "./PlanPanel";
+import { PlanPanel, type PlanSource } from "./PlanPanel";
 import { ResultJson } from "./ResultJson";
 import { TopBar } from "./TopBar";
 import { TrafficPanel } from "./TrafficPanel";
@@ -28,11 +30,21 @@ function offeredProtocol(): string | undefined {
   return new URLSearchParams(window.location.search).get("protocol") ?? undefined;
 }
 
+function replayRequested(): boolean {
+  return REPLAY_BY_DEFAULT || (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("replay") === "1");
+}
+
+// Loaded only in replay mode, so live builds do not ship the recorded replies up front.
+const loadFixture = (replay: boolean): Promise<ReplayFixture | undefined> =>
+  replay ? import("@/lib/replay-fixture.json").then((m) => m.default as unknown as ReplayFixture) : Promise.resolve(undefined);
+
 export function Sim() {
   const [state, dispatch] = useReducer(reduce, SALONS[0]?.id ?? "demo-salon", initialState);
   const [sessionNonce, setSessionNonce] = useState(0);
   const [protocol, setProtocol] = useState<string | undefined>(undefined);
   const [ready, setReady] = useState(false);
+  const [replay, setReplay] = useState(false);
+  const [fixture, setFixture] = useState<ReplayFixture | undefined>(undefined);
   const session = useRef<LiveSession | undefined>(undefined);
   const pick = useRef<Pick | undefined>(undefined);
   const latest = useRef(state);
@@ -46,6 +58,7 @@ export function Sim() {
 
   useEffect(() => {
     setProtocol(offeredProtocol());
+    setReplay(replayRequested());
     setReady(true);
     chooserStatus().then(setClaude).catch(() => undefined);
   }, []);
@@ -56,7 +69,11 @@ export function Sim() {
     const epoch = Date.now();
     const token = SALONS.find((s) => s.id === state.salonId)?.token ?? "";
     dispatch({ type: "connecting" });
-    openSession({
+    loadFixture(replay)
+      .then((recorded) => {
+        if (recorded && alive) setFixture(recorded);
+        return openSession({
+      replay: recorded,
       url: MCP_URL,
       token,
       // A client offering 2025-03-26 cannot elicit, so it does not declare the capability.
@@ -68,7 +85,8 @@ export function Sim() {
           dispatch({ type: "dialog", dialog: { ...prompt, source: "elicitation" } });
           pick.current = (name) => resolve(name ? { action: "accept", content: { client: name } } : { action: "cancel" });
         }),
-    })
+        });
+      })
       .then((live) => {
         if (!alive) return void live.close();
         session.current = live;
@@ -84,7 +102,19 @@ export function Sim() {
       void session.current?.close();
       session.current = undefined;
     };
-  }, [ready, state.salonId, sessionNonce, protocol]);
+  }, [ready, state.salonId, sessionNonce, protocol, replay]);
+
+  const planSource = useMemo<PlanSource | undefined>(
+    () =>
+      replay && fixture
+        ? {
+            usage: async (token) => replayUsage(fixture, token),
+            waitlist: async () => replayWaitlist(),
+            join: async (email) => replayJoin(email),
+          }
+        : undefined,
+    [replay, fixture],
+  );
 
   const handle = useCallback((out: Interpreted, tool: string, args: Record<string, unknown>, toolResult: unknown) => {
     if (out.kind === "formula") {
@@ -188,6 +218,7 @@ export function Sim() {
     <div className="min-h-screen">
       <TopBar
         state={state}
+        replay={replay}
         onSalon={(salonId) => dispatch({ type: "salon", salonId })}
         onNewSession={() => setSessionNonce((n) => n + 1)}
         chooser={{ value: chooser, ranWith, claudeLabel: claude.available ? claude.label : undefined, onChange: setChooser }}
@@ -203,11 +234,11 @@ export function Sim() {
           <button
             data-testid="switch-to-replay"
             className="mt-2 min-h-11 rounded border border-[var(--ink)] px-3 text-[var(--ink)]"
-            onClick={() => dispatch({ type: "notice", notice: "Replay is not available in this build yet." })}
+            onClick={() => setReplay(true)}
           >
             Switch to replay
           </button>
-          {state.notice && <p className="mt-2 text-[var(--ink)]">{state.notice}</p>}
+          <p className="mt-2 text-sm text-[var(--ink)]">Replay answers from the server's recorded replies for the demo sentences.</p>
         </div>
       )}
       <main className="grid gap-4 p-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
@@ -229,6 +260,8 @@ export function Sim() {
           <PlanPanel
             token={SALONS.find((s) => s.id === state.salonId)?.token ?? ""}
             refreshKey={`${state.salonId}:${state.status}:${state.turns.length}`}
+            source={planSource}
+            reported={replay ? state.usage : undefined}
           />
           <TrafficPanel rows={state.traffic} />
           <label className="flex items-center gap-2 text-sm">

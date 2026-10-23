@@ -2,6 +2,8 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { ElicitRequestSchema, type ElicitResult } from "@modelcontextprotocol/sdk/types.js";
 import { cardUri, type ToolMeta } from "./devices.ts";
+import type { ReplayFixture } from "./replay-fixture.ts";
+import { ReplayTransport } from "./replay-transport.ts";
 import { LoggingTransport, type Direction } from "./traffic.ts";
 
 const CARD_MIME = "text/html;profile=mcp-app";
@@ -19,6 +21,8 @@ export interface SessionOptions {
   readonly offerProtocol?: string;
   readonly onTraffic: (direction: Direction, message: Record<string, unknown>) => void;
   readonly onElicit: (prompt: ElicitPrompt) => Promise<ElicitResult>;
+  /** Answer from these recorded server replies instead of the network (replay mode). */
+  readonly replay?: ReplayFixture;
 }
 
 export interface LiveSession {
@@ -72,7 +76,7 @@ async function prefetchCard(client: Client, uri: string | undefined) {
   }
 }
 
-/** A real MCP client over Streamable HTTP, as a host would run one. */
+/** A real MCP client over Streamable HTTP, as a host would run one, or over recorded replies. */
 export async function openSession(options: SessionOptions): Promise<LiveSession> {
   const capabilities = options.elicitation ? { elicitation: { form: {} } } : {};
   const client = new Client({ name: "formula-book-sim", version: "0.1.0" }, { capabilities });
@@ -82,10 +86,13 @@ export async function openSession(options: SessionOptions): Promise<LiveSession>
       return options.onElicit({ question: params.message, options: optionsFrom(params.requestedSchema) });
     });
   }
-  const http = new StreamableHTTPClientTransport(new URL(options.url), {
-    requestInit: { headers: { Authorization: `Bearer ${options.token}` } },
-  });
-  const transport = new LoggingTransport(http, options.onTraffic, options.offerProtocol);
+  const http = options.replay
+    ? undefined
+    : new StreamableHTTPClientTransport(new URL(options.url), {
+        requestInit: { headers: { Authorization: `Bearer ${options.token}` } },
+      });
+  const inner = http ?? new ReplayTransport(options.replay as ReplayFixture, options.token);
+  const transport = new LoggingTransport(inner, options.onTraffic, options.offerProtocol);
   await client.connect(transport);
   const { uri, ...listing } = await listTools(client);
   const prefetched = await prefetchCard(client, uri);
@@ -97,7 +104,7 @@ export async function openSession(options: SessionOptions): Promise<LiveSession>
     sessionId: transport.sessionId,
     protocolVersion: transport.protocolVersion,
     close: async () => {
-      await http.terminateSession().catch(() => undefined); // the server may already be gone
+      await http?.terminateSession().catch(() => undefined); // the server may already be gone
       await client.close();
     },
   };

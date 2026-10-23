@@ -6,6 +6,9 @@ export interface SalonOption {
 
 export const MCP_URL = process.env.NEXT_PUBLIC_MCP_URL || "http://127.0.0.1:8787/mcp";
 
+/** Hosted builds with no MCP server set NEXT_PUBLIC_MODE=replay; ?replay=1 does the same per visit. */
+export const REPLAY_BY_DEFAULT = process.env.NEXT_PUBLIC_MODE === "replay";
+
 // Public demo tokens for the two demo salons; they guard demo data only and are named in the README.
 export const SALONS: readonly SalonOption[] = [
   { id: "demo-salon", name: "Demo Salon", token: "demo-salon-token" },

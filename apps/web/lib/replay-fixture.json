@@ -1,0 +1,1281 @@
+{
+ "recordedAt": "2026-10-23T15:51:10.772Z",
+ "initialize": {
+  "protocolVersion": "2025-11-25",
+  "capabilities": {
+   "tools": {
+    "listChanged": true
+   },
+   "resources": {
+    "listChanged": true
+   }
+  },
+  "serverInfo": {
+   "name": "formula-book",
+   "version": "0.1.0"
+  }
+ },
+ "toolsList": {
+  "tools": [
+   {
+    "name": "get_last_formula",
+    "title": "Get a client's last formula",
+    "description": "Call when the colourist asks for a client's last or previous formula, for example 'Lena's last formula'. Returns that client's most recent saved formula: shades and grams, developer strength, ratio, processing time and totals in grams. If two clients share the name it asks which one; if the client is unknown it says so and how to save one.",
+    "inputSchema": {
+     "$schema": "http://json-schema.org/draft-07/schema#",
+     "type": "object",
+     "properties": {
+      "client_name": {
+       "type": "string",
+       "minLength": 1,
+       "description": "The client's name as the colourist said it, for example 'Lena'."
+      }
+     },
+     "required": [
+      "client_name"
+     ]
+    },
+    "annotations": {
+     "readOnlyHint": true
+    },
+    "execution": {
+     "taskSupport": "forbidden"
+    },
+    "_meta": {
+     "ui": {
+      "resourceUri": "ui://formula-card/f1ad43376859f684.html",
+      "invoking": "Looking up the formula",
+      "invoked": "Formula ready"
+     }
+    }
+   },
+   {
+    "name": "scale_formula",
+    "title": "Scale a client's last formula",
+    "description": "Call when the colourist wants a client's last formula made bigger or smaller for today's bowl, for example 'make it one and a half times' or 'make it 150 grams in total'. Give exactly one of factor or target_total_grams. Returns the scaled grams and totals. It does not change the saved formula.",
+    "inputSchema": {
+     "$schema": "http://json-schema.org/draft-07/schema#",
+     "type": "object",
+     "properties": {
+      "client_name": {
+       "type": "string",
+       "minLength": 1,
+       "description": "The client's name as the colourist said it, for example 'Lena'."
+      },
+      "factor": {
+       "description": "Multiply every amount by this, for example 1.5.",
+       "type": "number"
+      },
+      "target_total_grams": {
+       "description": "Scale so colour plus developer weighs this many grams.",
+       "type": "number"
+      }
+     },
+     "required": [
+      "client_name"
+     ]
+    },
+    "annotations": {
+     "readOnlyHint": true
+    },
+    "execution": {
+     "taskSupport": "forbidden"
+    },
+    "_meta": {
+     "ui": {
+      "resourceUri": "ui://formula-card/f1ad43376859f684.html",
+      "invoking": "Scaling the formula",
+      "invoked": "Formula scaled"
+     }
+    }
+   },
+   {
+    "name": "save_formula",
+    "title": "Save a formula for a client",
+    "description": "Call when the colourist says a new formula for a client, for example 'colour Marta: 30 grams 6N and 20 grams 7.1, 20 volume, one to one and a half'. Saves it as that client's latest formula and returns it with totals in grams. Refuses developer strengths other than 10, 20, 30 or 40 volume, and refuses when the salon's free plan is full.",
+    "inputSchema": {
+     "$schema": "http://json-schema.org/draft-07/schema#",
+     "type": "object",
+     "properties": {
+      "client_name": {
+       "type": "string",
+       "minLength": 1,
+       "description": "The client's name as the colourist said it, for example 'Lena'."
+      },
+      "components": {
+       "minItems": 1,
+       "type": "array",
+       "items": {
+        "type": "object",
+        "properties": {
+         "shade": {
+          "type": "string",
+          "minLength": 1
+         },
+         "grams": {
+          "type": "number",
+          "exclusiveMinimum": 0
+         }
+        },
+        "required": [
+         "shade",
+         "grams"
+        ]
+       },
+       "description": "Each colour in the bowl: shade code and grams, for example 6N and 30."
+      },
+      "developer_volume": {
+       "type": "number",
+       "description": "Developer strength in volume: 10, 20, 30 or 40."
+      },
+      "developer_ratio": {
+       "description": "Developer grams per gram of colour. 'One to one and a half' is 1.5. Default 1.",
+       "type": "number",
+       "exclusiveMinimum": 0
+      },
+      "processing_minutes": {
+       "description": "Processing time in minutes.",
+       "type": "integer",
+       "exclusiveMinimum": 0,
+       "maximum": 9007199254740991
+      },
+      "note": {
+       "description": "A short note, for example 'root touch-up'.",
+       "type": "string",
+       "maxLength": 200
+      }
+     },
+     "required": [
+      "client_name",
+      "components",
+      "developer_volume"
+     ]
+    },
+    "execution": {
+     "taskSupport": "forbidden"
+    },
+    "_meta": {
+     "ui": {
+      "resourceUri": "ui://formula-card/f1ad43376859f684.html",
+      "invoking": "Saving the formula",
+      "invoked": "Formula saved"
+     }
+    }
+   }
+  ]
+ },
+ "resources": {
+  "ui://formula-card/f1ad43376859f684.html": {
+   "contents": [
+    {
+     "uri": "ui://formula-card/f1ad43376859f684.html",
+     "mimeType": "text/html;profile=mcp-app",
+     "text": "<!doctype html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<meta http-equiv=\"Content-Security-Policy\" content=\"default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n<title>Formula card</title>\n<style>:root {\n  --paper: #f6f1ea;\n  --ink: #1e1b1a;\n  --lcd: #d5e0cf;\n  --copper: #a34a25;\n  --developer: #2f6f6a;\n  --refuse: #b3261e;\n  --rule: rgba(30, 27, 26, 0.14);\n  --ease-settle: cubic-bezier(0.2, 0, 0, 1);\n}\n* { box-sizing: border-box; }\nhtml, body { margin: 0; background: transparent; color: var(--ink); }\nbody { font: 16px/1.4 system-ui, -apple-system, \"Segoe UI\", sans-serif; font-variant-numeric: tabular-nums; }\n#card {\n  background: var(--paper);\n  border-radius: 10px;\n  padding: 20px 22px;\n  box-shadow: 0 1px 0 var(--rule), 0 6px 20px rgba(30, 27, 26, 0.08);\n  min-height: 260px;\n}\n.settle { animation: settle 240ms var(--ease-settle) both; }\n@keyframes settle { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }\n.head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 12px; }\n.client { font-family: Georgia, \"Times New Roman\", serif; font-size: 28px; font-weight: 600; margin: 0; }\n.chip { font-size: 12px; padding: 2px 8px; border-radius: 99px; background: var(--lcd); color: rgba(30, 27, 26, 0.6); }\n.chip.saved { background: var(--developer); color: #fff; }\n.chip.scale { background: var(--copper); color: #fff; }\n.rows { list-style: none; margin: 16px 0 0; padding: 0; }\n.row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--rule); }\n.row.dev { color: var(--developer); }\n.label { font-size: 14px; color: rgba(30, 27, 26, 0.65); }\n.readout { background: var(--lcd); border-radius: 6px; padding: 2px 10px; font-weight: 600; min-width: 84px; text-align: right; }\n.total { display: flex; justify-content: space-between; align-items: center; margin-top: 14px; font-size: 20px; font-weight: 700; }\n.total .readout { font-size: 22px; }\n.meta { margin-top: 10px; font-size: 14px; color: rgba(30, 27, 26, 0.7); }\n.skel { height: 18px; border-radius: 4px; background: var(--lcd); opacity: 0.7; margin: 14px 0; }\n.skel.wide { width: 60%; height: 26px; }\n.empty { color: rgba(30, 27, 26, 0.65); }\nbody[data-surface=\"mobile\"] #card { padding: 14px; border-radius: 8px; }\nbody[data-surface=\"mobile\"] .client { font-size: 22px; }\nbody[data-surface=\"mobile\"] .total { font-size: 18px; }\n@media (prefers-reduced-motion: reduce) { .settle { animation: none; } }\n</style>\n</head>\n<body data-surface=\"screen\">\n<main id=\"card\" aria-live=\"polite\"></main>\n<script>// Formula card: an MCP Apps view. It talks JSON-RPC over postMessage with its host:\n// ui/initialize -> ui/notifications/initialized, then renders each ui/notifications/tool-result\n// and re-adapts on ui/notifications/host-context-changed. No network, no external files.\n(function (global) {\n  \"use strict\";\n\n  var KNOWN_CLASSES = { \"echo-show-5\": \"screen\", \"echo-show-8\": \"screen\", \"echo-show-15\": \"screen\", mobile: \"mobile\", voice: \"voice\" };\n  var MOBILE_MAX_WIDTH = 480;\n\n  function widthOf(ctx) {\n    if (typeof ctx.maxWidth === \"number\") return ctx.maxWidth;\n    var dims = ctx.containerDimensions || {};\n    if (typeof dims.maxWidth === \"number\") return dims.maxWidth;\n    if (typeof dims.width === \"number\") return dims.width;\n    return undefined;\n  }\n\n  // deviceClass wins when it is one we know; otherwise fall back to width, as the Alexa+ layout guide advises.\n  function resolveSurface(ctx) {\n    var context = ctx || {};\n    var known = KNOWN_CLASSES[context.deviceClass];\n    if (known) return known;\n    var width = widthOf(context);\n    if (context.deviceClass) {\n      console.warn('Formula card: unknown deviceClass \"' + context.deviceClass + '\"; using width ' + width + \" instead.\");\n    }\n    if (width === undefined) return \"screen\";\n    return width <= MOBILE_MAX_WIDTH ? \"mobile\" : \"screen\";\n  }\n\n  function num(value) {\n    return String(Math.round(Number(value) * 10) / 10);\n  }\n\n  function cardModel(data) {\n    if (!data || data.status !== \"ok\" || !data.formula || !data.totals) return null;\n    var formula = data.formula;\n    var totals = data.totals;\n    return {\n      client: String(data.client),\n      rows: (formula.components || []).map(function (c) {\n        return { shade: String(c.shade), grams: num(c.grams) + \" g\" };\n      }),\n      developer: num(totals.developer_grams) + \" g\",\n      developerLine: formula.developer_volume + \" vol, 1 to \" + num(formula.developer_ratio),\n      total: num(totals.total_grams) + \" g\",\n      scale: data.scale_factor !== undefined ? \"x\" + num(data.scale_factor) : null,\n      minutes: formula.processing_minutes ? formula.processing_minutes + \" min\" : null,\n      note: formula.note ? String(formula.note) : null,\n      saved: data.saved === true,\n      demo: data.demo === true,\n    };\n  }\n\n  function el(doc, tag, attrs, text) {\n    var node = doc.createElement(tag);\n    Object.keys(attrs || {}).forEach(function (key) {\n      node.setAttribute(key, attrs[key]);\n    });\n    if (text !== undefined && text !== null) node.textContent = text;\n    return node;\n  }\n\n  function renderSkeleton(doc, root) {\n    root.appendChild(el(doc, \"div\", { class: \"skel wide\" }));\n    for (var i = 0; i < 3; i++) root.appendChild(el(doc, \"div\", { class: \"skel\" }));\n  }\n\n  function renderCard(doc, root, model) {\n    var head = el(doc, \"div\", { class: \"head\" });\n    head.appendChild(el(doc, \"h1\", { class: \"client\", \"data-testid\": \"card-client\" }, model.client));\n    if (model.scale) head.appendChild(el(doc, \"span\", { class: \"chip scale\", \"data-testid\": \"card-scale-factor\" }, model.scale));\n    if (model.saved) head.appendChild(el(doc, \"span\", { class: \"chip saved\", \"data-testid\": \"card-saved-tag\" }, \"Saved\"));\n    if (model.demo) head.appendChild(el(doc, \"span\", { class: \"chip\", \"data-testid\": \"demo-data-chip\" }, \"Demo data\"));\n    root.appendChild(head);\n\n    var rows = el(doc, \"ul\", { class: \"rows\" });\n    model.rows.forEach(function (row, i) {\n      var li = el(doc, \"li\", { class: \"row\", \"data-testid\": \"card-row-\" + i });\n      li.appendChild(el(doc, \"span\", {}, row.shade));\n      li.appendChild(el(doc, \"span\", { class: \"readout\" }, row.grams));\n      rows.appendChild(li);\n    });\n    var dev = el(doc, \"li\", { class: \"row dev\" });\n    dev.appendChild(el(doc, \"span\", {}, \"Developer \" + model.developerLine));\n    dev.appendChild(el(doc, \"span\", { class: \"readout\", \"data-testid\": \"card-developer\" }, model.developer));\n    rows.appendChild(dev);\n    root.appendChild(rows);\n\n    var total = el(doc, \"div\", { class: \"total\" });\n    total.appendChild(el(doc, \"span\", {}, \"Total in the bowl\"));\n    total.appendChild(el(doc, \"span\", { class: \"readout\", \"data-testid\": \"card-total\" }, model.total));\n    root.appendChild(total);\n\n    var extra = [model.minutes, model.note].filter(Boolean).join(\" · \");\n    if (extra) root.appendChild(el(doc, \"p\", { class: \"meta\" }, extra));\n  }\n\n  function start(win) {\n    var doc = win.document;\n    var root = doc.getElementById(\"card\");\n    var host = win.parent;\n    var nextId = 1;\n    var pending = {};\n    var hostContext = {};\n    var lastResult = null;\n\n    function post(message) {\n      host.postMessage(message, \"*\"); // srcdoc iframe: the parent's origin is not known here\n    }\n    function request(method, params) {\n      var id = nextId++;\n      post({ jsonrpc: \"2.0\", id: id, method: method, params: params });\n      return new Promise(function (resolve) {\n        pending[id] = resolve;\n      });\n    }\n    function notify(method, params) {\n      post({ jsonrpc: \"2.0\", method: method, params: params || {} });\n    }\n    function reply(id, result) {\n      post({ jsonrpc: \"2.0\", id: id, result: result });\n    }\n\n    function render() {\n      doc.body.setAttribute(\"data-surface\", resolveSurface(hostContext));\n      root.textContent = \"\";\n      var model = lastResult ? cardModel(lastResult.structuredContent) : null;\n      if (!lastResult) renderSkeleton(doc, root);\n      else if (!model) root.appendChild(el(doc, \"p\", { class: \"empty\" }, \"No formula yet.\"));\n      else {\n        root.className = \"settle\";\n        renderCard(doc, root, model);\n      }\n    }\n\n    if (typeof win.ResizeObserver === \"function\") {\n      new win.ResizeObserver(function () {\n        notify(\"ui/notifications/size-changed\", { width: root.offsetWidth, height: doc.documentElement.scrollHeight });\n      }).observe(root);\n    }\n\n    win.addEventListener(\"message\", function (event) {\n      if (event.source !== host) return;\n      var message = event.data;\n      if (!message || message.jsonrpc !== \"2.0\") return;\n      if (message.method === undefined && message.id !== undefined) {\n        var resolve = pending[message.id];\n        delete pending[message.id];\n        if (resolve) resolve(message.result);\n        return;\n      }\n      switch (message.method) {\n        case \"ui/notifications/tool-result\":\n          lastResult = message.params;\n          render();\n          break;\n        case \"ui/notifications/host-context-changed\":\n          hostContext = Object.assign({}, hostContext, message.params);\n          render();\n          break;\n        case \"ui/resource-teardown\":\n        case \"ping\":\n          reply(message.id, {});\n          break;\n        default:\n          if (message.id !== undefined) post({ jsonrpc: \"2.0\", id: message.id, error: { code: -32601, message: \"Method not found\" } });\n      }\n    });\n\n    render();\n    request(\"ui/initialize\", {\n      appInfo: { name: \"formula-card\", version: \"0.1.0\" },\n      appCapabilities: {},\n      protocolVersion: \"2026-01-26\",\n    }).then(function (result) {\n      hostContext = (result && result.hostContext) || {};\n      render();\n      notify(\"ui/notifications/initialized\");\n    });\n  }\n\n  global.FormulaCard = { resolveSurface: resolveSurface, cardModel: cardModel };\n  if (global.document && global.parent && global.parent !== global) start(global);\n})(this);\n</script>\n</body>\n</html>\n",
+     "_meta": {
+      "ui": {
+       "csp": {
+        "connectDomains": [],
+        "resourceDomains": []
+       }
+      }
+     }
+    }
+   ]
+  }
+ },
+ "usage": {
+  "demo-salon-token": {
+   "count": 3,
+   "cap": 50,
+   "price": "Hypothesis, payments not live"
+  },
+  "booth12-token": {
+   "count": 50,
+   "cap": 50,
+   "price": "Hypothesis, payments not live"
+  }
+ },
+ "calls": {
+  "demo-salon-token|get_last_formula|{\"client_name\":\"Lena\"}": [
+   {
+    "after": [],
+    "result": {
+     "_meta": {
+      "ui": {
+       "resourceUri": "ui://formula-card/f1ad43376859f684.html",
+       "invoking": "Looking up the formula",
+       "invoked": "Formula ready"
+      }
+     },
+     "content": [
+      {
+       "type": "text",
+       "text": "Lena Okafor: 40 grams 5N, 10 grams 6.3, with 50 grams of 20 volume developer, ratio 1 to 1, 35 minutes. Total 100 grams."
+      }
+     ],
+     "structuredContent": {
+      "status": "ok",
+      "action": "get",
+      "client": "Lena Okafor",
+      "demo": true,
+      "formula": {
+       "components": [
+        {
+         "shade": "5N",
+         "grams": 40
+        },
+        {
+         "shade": "6.3",
+         "grams": 10
+        }
+       ],
+       "developer_volume": 20,
+       "developer_ratio": 1,
+       "processing_minutes": 35,
+       "note": "root touch-up",
+       "saved_at": "2026-09-02T11:15:00Z"
+      },
+      "totals": {
+       "colour_grams": 50,
+       "developer_grams": 50,
+       "total_grams": 100
+      },
+      "usage": {
+       "count": 3,
+       "cap": 50
+      }
+     }
+    }
+   },
+   {
+    "after": [
+     "demo-salon-token|save_formula|{\"client_name\":\"Marta\",\"components\":[{\"grams\":30,\"shade\":\"6N\"},{\"grams\":20,\"shade\":\"7.1\"}],\"developer_ratio\":1.5,\"developer_volume\":20}"
+    ],
+    "result": {
+     "_meta": {
+      "ui": {
+       "resourceUri": "ui://formula-card/f1ad43376859f684.html",
+       "invoking": "Looking up the formula",
+       "invoked": "Formula ready"
+      }
+     },
+     "content": [
+      {
+       "type": "text",
+       "text": "Lena Okafor: 40 grams 5N, 10 grams 6.3, with 50 grams of 20 volume developer, ratio 1 to 1, 35 minutes. Total 100 grams."
+      }
+     ],
+     "structuredContent": {
+      "status": "ok",
+      "action": "get",
+      "client": "Lena Okafor",
+      "demo": true,
+      "formula": {
+       "components": [
+        {
+         "shade": "5N",
+         "grams": 40
+        },
+        {
+         "shade": "6.3",
+         "grams": 10
+        }
+       ],
+       "developer_volume": 20,
+       "developer_ratio": 1,
+       "processing_minutes": 35,
+       "note": "root touch-up",
+       "saved_at": "2026-09-02T11:15:00Z"
+      },
+      "totals": {
+       "colour_grams": 50,
+       "developer_grams": 50,
+       "total_grams": 100
+      },
+      "usage": {
+       "count": 4,
+       "cap": 50
+      }
+     }
+    }
+   }
+  ],
+  "demo-salon-token|scale_formula|{\"client_name\":\"Lena Okafor\",\"factor\":1.5}": [
+   {
+    "after": [],
+    "result": {
+     "_meta": {
+      "ui": {
+       "resourceUri": "ui://formula-card/f1ad43376859f684.html",
+       "invoking": "Scaling the formula",
+       "invoked": "Formula scaled"
+      }
+     },
+     "content": [
+      {
+       "type": "text",
+       "text": "Lena Okafor: 60 grams 5N, 15 grams 6.3, with 75 grams of 20 volume developer, ratio 1 to 1, 35 minutes. Total 150 grams, times 1.5."
+      }
+     ],
+     "structuredContent": {
+      "status": "ok",
+      "action": "scale",
+      "client": "Lena Okafor",
+      "demo": true,
+      "formula": {
+       "components": [
+        {
+         "shade": "5N",
+         "grams": 60
+        },
+        {
+         "shade": "6.3",
+         "grams": 15
+        }
+       ],
+       "developer_volume": 20,
+       "developer_ratio": 1,
+       "processing_minutes": 35,
+       "note": "root touch-up",
+       "saved_at": "2026-09-02T11:15:00Z"
+      },
+      "totals": {
+       "colour_grams": 75,
+       "developer_grams": 75,
+       "total_grams": 150
+      },
+      "scale_factor": 1.5,
+      "usage": {
+       "count": 3,
+       "cap": 50
+      }
+     }
+    }
+   }
+  ],
+  "demo-salon-token|scale_formula|{\"client_name\":\"Lena Okafor\",\"factor\":2}": [
+   {
+    "after": [],
+    "result": {
+     "_meta": {
+      "ui": {
+       "resourceUri": "ui://formula-card/f1ad43376859f684.html",
+       "invoking": "Scaling the formula",
+       "invoked": "Formula scaled"
+      }
+     },
+     "content": [
+      {
+       "type": "text",
+       "text": "Lena Okafor: 80 grams 5N, 20 grams 6.3, with 100 grams of 20 volume developer, ratio 1 to 1, 35 minutes. Total 200 grams, times 2."
+      }
+     ],
+     "structuredContent": {
+      "status": "ok",
+      "action": "scale",
+      "client": "Lena Okafor",
+      "demo": true,
+      "formula": {
+       "components": [
+        {
+         "shade": "5N",
+         "grams": 80
+        },
+        {
+         "shade": "6.3",
+         "grams": 20
+        }
+       ],
+       "developer_volume": 20,
+       "developer_ratio": 1,
+       "processing_minutes": 35,
+       "note": "root touch-up",
+       "saved_at": "2026-09-02T11:15:00Z"
+      },
+      "totals": {
+       "colour_grams": 100,
+       "developer_grams": 100,
+       "total_grams": 200
+      },
+      "scale_factor": 2,
+      "usage": {
+       "count": 3,
+       "cap": 50
+      }
+     }
+    }
+   }
+  ],
+  "demo-salon-token|scale_formula|{\"client_name\":\"Lena Okafor\",\"target_total_grams\":150}": [
+   {
+    "after": [],
+    "result": {
+     "_meta": {
+      "ui": {
+       "resourceUri": "ui://formula-card/f1ad43376859f684.html",
+       "invoking": "Scaling the formula",
+       "invoked": "Formula scaled"
+      }
+     },
+     "content": [
+      {
+       "type": "text",
+       "text": "Lena Okafor: 60 grams 5N, 15 grams 6.3, with 75 grams of 20 volume developer, ratio 1 to 1, 35 minutes. Total 150 grams, times 1.5."
+      }
+     ],
+     "structuredContent": {
+      "status": "ok",
+      "action": "scale",
+      "client": "Lena Okafor",
+      "demo": true,
+      "formula": {
+       "components": [
+        {
+         "shade": "5N",
+         "grams": 60
+        },
+        {
+         "shade": "6.3",
+         "grams": 15
+        }
+       ],
+       "developer_volume": 20,
+       "developer_ratio": 1,
+       "processing_minutes": 35,
+       "note": "root touch-up",
+       "saved_at": "2026-09-02T11:15:00Z"
+      },
+      "totals": {
+       "colour_grams": 75,
+       "developer_grams": 75,
+       "total_grams": 150
+      },
+      "scale_factor": 1.5,
+      "usage": {
+       "count": 3,
+       "cap": 50
+      }
+     }
+    }
+   }
+  ],
+  "demo-salon-token|scale_formula|{\"client_name\":\"Lena Okafor\",\"target_total_grams\":200}": [
+   {
+    "after": [],
+    "result": {
+     "_meta": {
+      "ui": {
+       "resourceUri": "ui://formula-card/f1ad43376859f684.html",
+       "invoking": "Scaling the formula",
+       "invoked": "Formula scaled"
+      }
+     },
+     "content": [
+      {
+       "type": "text",
+       "text": "Lena Okafor: 80 grams 5N, 20 grams 6.3, with 100 grams of 20 volume developer, ratio 1 to 1, 35 minutes. Total 200 grams, times 2."
+      }
+     ],
+     "structuredContent": {
+      "status": "ok",
+      "action": "scale",
+      "client": "Lena Okafor",
+      "demo": true,
+      "formula": {
+       "components": [
+        {
+         "shade": "5N",
+         "grams": 80
+        },
+        {
+         "shade": "6.3",
+         "grams": 20
+        }
+       ],
+       "developer_volume": 20,
+       "developer_ratio": 1,
+       "processing_minutes": 35,
+       "note": "root touch-up",
+       "saved_at": "2026-09-02T11:15:00Z"
+      },
+      "totals": {
+       "colour_grams": 100,
+       "developer_grams": 100,
+       "total_grams": 200
+      },
+      "scale_factor": 2,
+      "usage": {
+       "count": 3,
+       "cap": 50
+      }
+     }
+    }
+   }
+  ],
+  "demo-salon-token|get_last_formula|{\"client_name\":\"Marta\"}": [
+   {
+    "after": [],
+    "result": {
+     "content": [
+      {
+       "type": "text",
+       "text": "I have no formula for Marta. Say the formula, for example 'colour Marta, 30 grams 6N, 20 volume, one to one', and I will save it."
+      }
+     ],
+     "structuredContent": {
+      "status": "refused",
+      "reason": "not_found",
+      "message": "I have no formula for Marta. Say the formula, for example 'colour Marta, 30 grams 6N, 20 volume, one to one', and I will save it."
+     }
+    }
+   },
+   {
+    "after": [
+     "demo-salon-token|save_formula|{\"client_name\":\"Marta\",\"components\":[{\"grams\":30,\"shade\":\"6N\"},{\"grams\":20,\"shade\":\"7.1\"}],\"developer_ratio\":1.5,\"developer_volume\":20}"
+    ],
+    "result": {
+     "_meta": {
+      "ui": {
+       "resourceUri": "ui://formula-card/f1ad43376859f684.html",
+       "invoking": "Looking up the formula",
+       "invoked": "Formula ready"
+      }
+     },
+     "content": [
+      {
+       "type": "text",
+       "text": "Marta: 30 grams 6N, 20 grams 7.1, with 75 grams of 20 volume developer, ratio 1 to 1.5. Total 125 grams."
+      }
+     ],
+     "structuredContent": {
+      "status": "ok",
+      "action": "get",
+      "client": "Marta",
+      "demo": true,
+      "formula": {
+       "components": [
+        {
+         "shade": "6N",
+         "grams": 30
+        },
+        {
+         "shade": "7.1",
+         "grams": 20
+        }
+       ],
+       "developer_volume": 20,
+       "developer_ratio": 1.5,
+       "saved_at": "2026-10-23T15:51:09.987Z"
+      },
+      "totals": {
+       "colour_grams": 50,
+       "developer_grams": 75,
+       "total_grams": 125
+      },
+      "usage": {
+       "count": 4,
+       "cap": 50
+      }
+     }
+    }
+   }
+  ],
+  "demo-salon-token|get_last_formula|{\"client_name\":\"Rohan\"}": [
+   {
+    "after": [],
+    "result": {
+     "content": [
+      {
+       "type": "text",
+       "text": "I have no formula for Rohan. Say the formula, for example 'colour Rohan, 30 grams 6N, 20 volume, one to one', and I will save it."
+      }
+     ],
+     "structuredContent": {
+      "status": "refused",
+      "reason": "not_found",
+      "message": "I have no formula for Rohan. Say the formula, for example 'colour Rohan, 30 grams 6N, 20 volume, one to one', and I will save it."
+     }
+    }
+   },
+   {
+    "after": [
+     "demo-salon-token|save_formula|{\"client_name\":\"Marta\",\"components\":[{\"grams\":30,\"shade\":\"6N\"},{\"grams\":20,\"shade\":\"7.1\"}],\"developer_ratio\":1.5,\"developer_volume\":20}"
+    ],
+    "result": {
+     "content": [
+      {
+       "type": "text",
+       "text": "I have no formula for Rohan. Say the formula, for example 'colour Rohan, 30 grams 6N, 20 volume, one to one', and I will save it."
+      }
+     ],
+     "structuredContent": {
+      "status": "refused",
+      "reason": "not_found",
+      "message": "I have no formula for Rohan. Say the formula, for example 'colour Rohan, 30 grams 6N, 20 volume, one to one', and I will save it."
+     }
+    }
+   }
+  ],
+  "demo-salon-token|get_last_formula|{\"client_name\":\"Priya\"}": [
+   {
+    "after": [],
+    "elicit": {
+     "params": {
+      "mode": "form",
+      "message": "I have two Priyas: Priya Shah and Priya Kapoor. Which one?",
+      "requestedSchema": {
+       "type": "object",
+       "properties": {
+        "client": {
+         "type": "string",
+         "title": "Client",
+         "enum": [
+          "Priya Shah",
+          "Priya Kapoor"
+         ]
+        }
+       },
+       "required": [
+        "client"
+       ]
+      }
+     },
+     "choices": {
+      "Priya Shah": {
+       "_meta": {
+        "ui": {
+         "resourceUri": "ui://formula-card/f1ad43376859f684.html",
+         "invoking": "Looking up the formula",
+         "invoked": "Formula ready"
+        }
+       },
+       "content": [
+        {
+         "type": "text",
+         "text": "Priya Shah: 35 grams 7N, 15 grams 8.1, with 75 grams of 20 volume developer, ratio 1 to 1.5, 30 minutes. Total 125 grams."
+        }
+       ],
+       "structuredContent": {
+        "status": "ok",
+        "action": "get",
+        "client": "Priya Shah",
+        "demo": true,
+        "formula": {
+         "components": [
+          {
+           "shade": "7N",
+           "grams": 35
+          },
+          {
+           "shade": "8.1",
+           "grams": 15
+          }
+         ],
+         "developer_volume": 20,
+         "developer_ratio": 1.5,
+         "processing_minutes": 30,
+         "saved_at": "2026-08-20T14:00:00Z"
+        },
+        "totals": {
+         "colour_grams": 50,
+         "developer_grams": 75,
+         "total_grams": 125
+        },
+        "usage": {
+         "count": 3,
+         "cap": 50
+        }
+       }
+      },
+      "Priya Kapoor": {
+       "_meta": {
+        "ui": {
+         "resourceUri": "ui://formula-card/f1ad43376859f684.html",
+         "invoking": "Looking up the formula",
+         "invoked": "Formula ready"
+        }
+       },
+       "content": [
+        {
+         "type": "text",
+         "text": "Priya Kapoor: 50 grams 4N, with 50 grams of 20 volume developer, ratio 1 to 1, 40 minutes. Total 100 grams."
+        }
+       ],
+       "structuredContent": {
+        "status": "ok",
+        "action": "get",
+        "client": "Priya Kapoor",
+        "demo": true,
+        "formula": {
+         "components": [
+          {
+           "shade": "4N",
+           "grams": 50
+          }
+         ],
+         "developer_volume": 20,
+         "developer_ratio": 1,
+         "processing_minutes": 40,
+         "saved_at": "2026-08-12T10:30:00Z"
+        },
+        "totals": {
+         "colour_grams": 50,
+         "developer_grams": 50,
+         "total_grams": 100
+        },
+        "usage": {
+         "count": 3,
+         "cap": 50
+        }
+       }
+      },
+      "": {
+       "content": [
+        {
+         "type": "text",
+         "text": "No problem. Nothing was changed."
+        }
+       ],
+       "structuredContent": {
+        "status": "cancelled",
+        "message": "No problem. Nothing was changed."
+       }
+      }
+     }
+    }
+   },
+   {
+    "after": [
+     "demo-salon-token|save_formula|{\"client_name\":\"Marta\",\"components\":[{\"grams\":30,\"shade\":\"6N\"},{\"grams\":20,\"shade\":\"7.1\"}],\"developer_ratio\":1.5,\"developer_volume\":20}"
+    ],
+    "elicit": {
+     "params": {
+      "mode": "form",
+      "message": "I have two Priyas: Priya Shah and Priya Kapoor. Which one?",
+      "requestedSchema": {
+       "type": "object",
+       "properties": {
+        "client": {
+         "type": "string",
+         "title": "Client",
+         "enum": [
+          "Priya Shah",
+          "Priya Kapoor"
+         ]
+        }
+       },
+       "required": [
+        "client"
+       ]
+      }
+     },
+     "choices": {
+      "Priya Shah": {
+       "_meta": {
+        "ui": {
+         "resourceUri": "ui://formula-card/f1ad43376859f684.html",
+         "invoking": "Looking up the formula",
+         "invoked": "Formula ready"
+        }
+       },
+       "content": [
+        {
+         "type": "text",
+         "text": "Priya Shah: 35 grams 7N, 15 grams 8.1, with 75 grams of 20 volume developer, ratio 1 to 1.5, 30 minutes. Total 125 grams."
+        }
+       ],
+       "structuredContent": {
+        "status": "ok",
+        "action": "get",
+        "client": "Priya Shah",
+        "demo": true,
+        "formula": {
+         "components": [
+          {
+           "shade": "7N",
+           "grams": 35
+          },
+          {
+           "shade": "8.1",
+           "grams": 15
+          }
+         ],
+         "developer_volume": 20,
+         "developer_ratio": 1.5,
+         "processing_minutes": 30,
+         "saved_at": "2026-08-20T14:00:00Z"
+        },
+        "totals": {
+         "colour_grams": 50,
+         "developer_grams": 75,
+         "total_grams": 125
+        },
+        "usage": {
+         "count": 4,
+         "cap": 50
+        }
+       }
+      },
+      "Priya Kapoor": {
+       "_meta": {
+        "ui": {
+         "resourceUri": "ui://formula-card/f1ad43376859f684.html",
+         "invoking": "Looking up the formula",
+         "invoked": "Formula ready"
+        }
+       },
+       "content": [
+        {
+         "type": "text",
+         "text": "Priya Kapoor: 50 grams 4N, with 50 grams of 20 volume developer, ratio 1 to 1, 40 minutes. Total 100 grams."
+        }
+       ],
+       "structuredContent": {
+        "status": "ok",
+        "action": "get",
+        "client": "Priya Kapoor",
+        "demo": true,
+        "formula": {
+         "components": [
+          {
+           "shade": "4N",
+           "grams": 50
+          }
+         ],
+         "developer_volume": 20,
+         "developer_ratio": 1,
+         "processing_minutes": 40,
+         "saved_at": "2026-08-12T10:30:00Z"
+        },
+        "totals": {
+         "colour_grams": 50,
+         "developer_grams": 50,
+         "total_grams": 100
+        },
+        "usage": {
+         "count": 4,
+         "cap": 50
+        }
+       }
+      },
+      "": {
+       "content": [
+        {
+         "type": "text",
+         "text": "No problem. Nothing was changed."
+        }
+       ],
+       "structuredContent": {
+        "status": "cancelled",
+        "message": "No problem. Nothing was changed."
+       }
+      }
+     }
+    }
+   }
+  ],
+  "demo-salon-token|save_formula|{\"client_name\":\"Marta\",\"components\":[{\"grams\":30,\"shade\":\"6N\"},{\"grams\":20,\"shade\":\"7.1\"}],\"developer_ratio\":1.5,\"developer_volume\":20}": [
+   {
+    "after": [],
+    "result": {
+     "_meta": {
+      "ui": {
+       "resourceUri": "ui://formula-card/f1ad43376859f684.html",
+       "invoking": "Saving the formula",
+       "invoked": "Formula saved"
+      }
+     },
+     "content": [
+      {
+       "type": "text",
+       "text": "Saved. Marta: 30 grams 6N, 20 grams 7.1, with 75 grams of 20 volume developer, ratio 1 to 1.5. Total 125 grams."
+      }
+     ],
+     "structuredContent": {
+      "status": "ok",
+      "action": "save",
+      "client": "Marta",
+      "demo": true,
+      "formula": {
+       "components": [
+        {
+         "shade": "6N",
+         "grams": 30
+        },
+        {
+         "shade": "7.1",
+         "grams": 20
+        }
+       ],
+       "developer_volume": 20,
+       "developer_ratio": 1.5,
+       "saved_at": "2026-10-23T15:51:09.987Z"
+      },
+      "totals": {
+       "colour_grams": 50,
+       "developer_grams": 75,
+       "total_grams": 125
+      },
+      "saved": true,
+      "usage": {
+       "count": 4,
+       "cap": 50
+      }
+     }
+    }
+   }
+  ],
+  "demo-salon-token|scale_formula|{\"client_name\":\"Marta\",\"factor\":1.5}": [
+   {
+    "after": [
+     "demo-salon-token|save_formula|{\"client_name\":\"Marta\",\"components\":[{\"grams\":30,\"shade\":\"6N\"},{\"grams\":20,\"shade\":\"7.1\"}],\"developer_ratio\":1.5,\"developer_volume\":20}"
+    ],
+    "result": {
+     "_meta": {
+      "ui": {
+       "resourceUri": "ui://formula-card/f1ad43376859f684.html",
+       "invoking": "Scaling the formula",
+       "invoked": "Formula scaled"
+      }
+     },
+     "content": [
+      {
+       "type": "text",
+       "text": "Marta: 45 grams 6N, 30 grams 7.1, with 112.5 grams of 20 volume developer, ratio 1 to 1.5. Total 187.5 grams, times 1.5."
+      }
+     ],
+     "structuredContent": {
+      "status": "ok",
+      "action": "scale",
+      "client": "Marta",
+      "demo": true,
+      "formula": {
+       "components": [
+        {
+         "shade": "6N",
+         "grams": 45
+        },
+        {
+         "shade": "7.1",
+         "grams": 30
+        }
+       ],
+       "developer_volume": 20,
+       "developer_ratio": 1.5,
+       "saved_at": "2026-10-23T15:51:09.987Z"
+      },
+      "totals": {
+       "colour_grams": 75,
+       "developer_grams": 112.5,
+       "total_grams": 187.5
+      },
+      "scale_factor": 1.5,
+      "usage": {
+       "count": 4,
+       "cap": 50
+      }
+     }
+    }
+   }
+  ],
+  "demo-salon-token|scale_formula|{\"client_name\":\"Marta\",\"factor\":2}": [
+   {
+    "after": [
+     "demo-salon-token|save_formula|{\"client_name\":\"Marta\",\"components\":[{\"grams\":30,\"shade\":\"6N\"},{\"grams\":20,\"shade\":\"7.1\"}],\"developer_ratio\":1.5,\"developer_volume\":20}"
+    ],
+    "result": {
+     "_meta": {
+      "ui": {
+       "resourceUri": "ui://formula-card/f1ad43376859f684.html",
+       "invoking": "Scaling the formula",
+       "invoked": "Formula scaled"
+      }
+     },
+     "content": [
+      {
+       "type": "text",
+       "text": "Marta: 60 grams 6N, 40 grams 7.1, with 150 grams of 20 volume developer, ratio 1 to 1.5. Total 250 grams, times 2."
+      }
+     ],
+     "structuredContent": {
+      "status": "ok",
+      "action": "scale",
+      "client": "Marta",
+      "demo": true,
+      "formula": {
+       "components": [
+        {
+         "shade": "6N",
+         "grams": 60
+        },
+        {
+         "shade": "7.1",
+         "grams": 40
+        }
+       ],
+       "developer_volume": 20,
+       "developer_ratio": 1.5,
+       "saved_at": "2026-10-23T15:51:09.987Z"
+      },
+      "totals": {
+       "colour_grams": 100,
+       "developer_grams": 150,
+       "total_grams": 250
+      },
+      "scale_factor": 2,
+      "usage": {
+       "count": 4,
+       "cap": 50
+      }
+     }
+    }
+   }
+  ],
+  "demo-salon-token|get_last_formula|{\"client_name\":\"Priya Shah\"}": [
+   {
+    "after": [
+     "demo-salon-token|save_formula|{\"client_name\":\"Marta\",\"components\":[{\"grams\":30,\"shade\":\"6N\"},{\"grams\":20,\"shade\":\"7.1\"}],\"developer_ratio\":1.5,\"developer_volume\":20}"
+    ],
+    "result": {
+     "_meta": {
+      "ui": {
+       "resourceUri": "ui://formula-card/f1ad43376859f684.html",
+       "invoking": "Looking up the formula",
+       "invoked": "Formula ready"
+      }
+     },
+     "content": [
+      {
+       "type": "text",
+       "text": "Priya Shah: 35 grams 7N, 15 grams 8.1, with 75 grams of 20 volume developer, ratio 1 to 1.5, 30 minutes. Total 125 grams."
+      }
+     ],
+     "structuredContent": {
+      "status": "ok",
+      "action": "get",
+      "client": "Priya Shah",
+      "demo": true,
+      "formula": {
+       "components": [
+        {
+         "shade": "7N",
+         "grams": 35
+        },
+        {
+         "shade": "8.1",
+         "grams": 15
+        }
+       ],
+       "developer_volume": 20,
+       "developer_ratio": 1.5,
+       "processing_minutes": 30,
+       "saved_at": "2026-08-20T14:00:00Z"
+      },
+      "totals": {
+       "colour_grams": 50,
+       "developer_grams": 75,
+       "total_grams": 125
+      },
+      "usage": {
+       "count": 4,
+       "cap": 50
+      }
+     }
+    }
+   }
+  ],
+  "demo-salon-token|scale_formula|{\"client_name\":\"Priya Shah\",\"factor\":1.5}": [
+   {
+    "after": [
+     "demo-salon-token|save_formula|{\"client_name\":\"Marta\",\"components\":[{\"grams\":30,\"shade\":\"6N\"},{\"grams\":20,\"shade\":\"7.1\"}],\"developer_ratio\":1.5,\"developer_volume\":20}"
+    ],
+    "result": {
+     "_meta": {
+      "ui": {
+       "resourceUri": "ui://formula-card/f1ad43376859f684.html",
+       "invoking": "Scaling the formula",
+       "invoked": "Formula scaled"
+      }
+     },
+     "content": [
+      {
+       "type": "text",
+       "text": "Priya Shah: 52.5 grams 7N, 22.5 grams 8.1, with 112.5 grams of 20 volume developer, ratio 1 to 1.5, 30 minutes. Total 187.5 grams, times 1.5."
+      }
+     ],
+     "structuredContent": {
+      "status": "ok",
+      "action": "scale",
+      "client": "Priya Shah",
+      "demo": true,
+      "formula": {
+       "components": [
+        {
+         "shade": "7N",
+         "grams": 52.5
+        },
+        {
+         "shade": "8.1",
+         "grams": 22.5
+        }
+       ],
+       "developer_volume": 20,
+       "developer_ratio": 1.5,
+       "processing_minutes": 30,
+       "saved_at": "2026-08-20T14:00:00Z"
+      },
+      "totals": {
+       "colour_grams": 75,
+       "developer_grams": 112.5,
+       "total_grams": 187.5
+      },
+      "scale_factor": 1.5,
+      "usage": {
+       "count": 4,
+       "cap": 50
+      }
+     }
+    }
+   }
+  ],
+  "demo-salon-token|get_last_formula|{\"client_name\":\"Priya Kapoor\"}": [
+   {
+    "after": [
+     "demo-salon-token|save_formula|{\"client_name\":\"Marta\",\"components\":[{\"grams\":30,\"shade\":\"6N\"},{\"grams\":20,\"shade\":\"7.1\"}],\"developer_ratio\":1.5,\"developer_volume\":20}"
+    ],
+    "result": {
+     "_meta": {
+      "ui": {
+       "resourceUri": "ui://formula-card/f1ad43376859f684.html",
+       "invoking": "Looking up the formula",
+       "invoked": "Formula ready"
+      }
+     },
+     "content": [
+      {
+       "type": "text",
+       "text": "Priya Kapoor: 50 grams 4N, with 50 grams of 20 volume developer, ratio 1 to 1, 40 minutes. Total 100 grams."
+      }
+     ],
+     "structuredContent": {
+      "status": "ok",
+      "action": "get",
+      "client": "Priya Kapoor",
+      "demo": true,
+      "formula": {
+       "components": [
+        {
+         "shade": "4N",
+         "grams": 50
+        }
+       ],
+       "developer_volume": 20,
+       "developer_ratio": 1,
+       "processing_minutes": 40,
+       "saved_at": "2026-08-12T10:30:00Z"
+      },
+      "totals": {
+       "colour_grams": 50,
+       "developer_grams": 50,
+       "total_grams": 100
+      },
+      "usage": {
+       "count": 4,
+       "cap": 50
+      }
+     }
+    }
+   }
+  ],
+  "demo-salon-token|scale_formula|{\"client_name\":\"Priya Kapoor\",\"factor\":1.5}": [
+   {
+    "after": [
+     "demo-salon-token|save_formula|{\"client_name\":\"Marta\",\"components\":[{\"grams\":30,\"shade\":\"6N\"},{\"grams\":20,\"shade\":\"7.1\"}],\"developer_ratio\":1.5,\"developer_volume\":20}"
+    ],
+    "result": {
+     "_meta": {
+      "ui": {
+       "resourceUri": "ui://formula-card/f1ad43376859f684.html",
+       "invoking": "Scaling the formula",
+       "invoked": "Formula scaled"
+      }
+     },
+     "content": [
+      {
+       "type": "text",
+       "text": "Priya Kapoor: 75 grams 4N, with 75 grams of 20 volume developer, ratio 1 to 1, 40 minutes. Total 150 grams, times 1.5."
+      }
+     ],
+     "structuredContent": {
+      "status": "ok",
+      "action": "scale",
+      "client": "Priya Kapoor",
+      "demo": true,
+      "formula": {
+       "components": [
+        {
+         "shade": "4N",
+         "grams": 75
+        }
+       ],
+       "developer_volume": 20,
+       "developer_ratio": 1,
+       "processing_minutes": 40,
+       "saved_at": "2026-08-12T10:30:00Z"
+      },
+      "totals": {
+       "colour_grams": 75,
+       "developer_grams": 75,
+       "total_grams": 150
+      },
+      "scale_factor": 1.5,
+      "usage": {
+       "count": 4,
+       "cap": 50
+      }
+     }
+    }
+   }
+  ],
+  "booth12-token|save_formula|{\"client_name\":\"Ines\",\"components\":[{\"grams\":30,\"shade\":\"6N\"}],\"developer_ratio\":1,\"developer_volume\":20}": [
+   {
+    "after": [],
+    "result": {
+     "content": [
+      {
+       "type": "text",
+       "text": "Your free plan holds 50 formulas and this salon has 50. Nothing was saved. Join the waitlist for the paid plan; no payment is set up yet."
+      }
+     ],
+     "structuredContent": {
+      "status": "refused",
+      "reason": "plan_full",
+      "message": "Your free plan holds 50 formulas and this salon has 50. Nothing was saved. Join the waitlist for the paid plan; no payment is set up yet.",
+      "usage": {
+       "count": 50,
+       "cap": 50
+      }
+     }
+    }
+   }
+  ],
+  "booth12-token|get_last_formula|{\"client_name\":\"Lena\"}": [
+   {
+    "after": [],
+    "result": {
+     "content": [
+      {
+       "type": "text",
+       "text": "I have no formula for Lena. Say the formula, for example 'colour Lena, 30 grams 6N, 20 volume, one to one', and I will save it."
+      }
+     ],
+     "structuredContent": {
+      "status": "refused",
+      "reason": "not_found",
+      "message": "I have no formula for Lena. Say the formula, for example 'colour Lena, 30 grams 6N, 20 volume, one to one', and I will save it."
+     }
+    }
+   }
+  ]
+ }
+}

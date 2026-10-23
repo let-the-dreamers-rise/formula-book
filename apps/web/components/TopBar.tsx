@@ -12,16 +12,22 @@ interface ChooserControl {
   readonly onChange: (value: "rules" | "claude") => void;
 }
 
-export function TopBar(props: { state: SimState; onSalon: (id: string) => void; onNewSession: () => void; chooser: ChooserControl }) {
+export function TopBar(props: {
+  state: SimState;
+  replay: boolean;
+  onSalon: (id: string) => void;
+  onNewSession: () => void;
+  chooser: ChooserControl;
+}) {
   const { state } = props;
   return (
     <header className="flex flex-wrap items-center gap-3 border-b border-black/10 bg-[var(--lcd)] px-4 py-3">
       <p className="font-[Georgia,serif] text-2xl font-semibold tracking-tight">Formula Book</p>
       <p data-testid="sim-banner" className="rounded bg-[var(--ink)] px-2 py-1 text-sm font-semibold text-white">
-        Simulated Alexa+ surface. Real MCP server.
+        {props.replay ? "Simulated Alexa+ surface. Recorded MCP server replies." : "Simulated Alexa+ surface. Real MCP server."}
       </p>
       <span data-testid="mode-badge" className="rounded bg-white px-2 py-1 text-sm">
-        Live server
+        {props.replay ? "Replay" : "Live server"}
       </span>
       <span data-testid="chooser-badge" className="rounded bg-[var(--copper)] px-2 py-1 text-sm text-white">
         {props.chooser.ranWith}
