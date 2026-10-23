@@ -32,8 +32,8 @@ export default function Home() {
             <Link href="/sim" className="min-h-11 rounded bg-[var(--copper)] px-5 py-3 text-white transition-transform hover:-translate-y-0.5">
               Try the simulated Alexa+ demo
             </Link>
-            <a href="#how" className="min-h-11 rounded border border-[var(--ink)] px-5 py-3 transition-transform hover:-translate-y-0.5">
-              How it works
+            <a href="/site/index.html" className="min-h-11 rounded border border-[var(--ink)] px-5 py-3 transition-transform hover:-translate-y-0.5">
+              Product site
             </a>
           </div>
           <p className="mt-4 text-sm text-black/60">Demo uses a labelled simulated Alexa+ client and demo data. Not tested on a real Alexa+ device.</p>

@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Formula Book: say the formula at the bowl</title>
+<meta name="description" content="For hair colourists with gloves on. Say a client's colour formula at the bowl, hear it back next visit, scaled to today's bowl.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%23a34a25'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<script>document.documentElement.classList.add("js")</script>
+</head>
+<body>
+<div class="progress" aria-hidden="true"><span></span></div>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  <a class="brand" href="#top">Formula Book</a>
+  <nav aria-label="Main">
+    <a href="#how">How it works</a>
+    <a href="#try">Try the maths</a>
+    <a href="#faq">FAQ</a>
+    <a class="btn btn-small" href="https://github.com/let-the-dreamers-rise/formula-book">Get the code</a>
+  </nav>
+</header>
+
+<main id="main">
+<section class="hero" id="top">
+  <div class="hero-copy">
+    <p class="eyebrow">For hair colourists, gloves on</p>
+    <h1 data-split>Say the formula at the bowl. Hear it back next visit.</h1>
+    <p class="lede" data-rise>Formula Book saves each client's colour formula by voice, reads it back and scales it to today's bowl. Any scale, no extra hardware.</p>
+    <div class="actions" data-rise>
+      <a class="btn" href="https://github.com/let-the-dreamers-rise/formula-book#run-it">Run the demo</a>
+      <a class="btn btn-ghost" href="#how">See how it works</a>
+    </div>
+    <p class="fine" data-rise>The demo runs on a labelled simulated Alexa+ client with demo data. Not tested on a real Alexa+ device.</p>
+  </div>
+  <div class="stage" aria-label="Scattered notes become one formula card" role="img">
+    <div class="scrap-layer">
+      <span class="scrap s1">Lena 5N 40?</span>
+      <span class="scrap s2">6.3 ... 10g</span>
+      <span class="scrap s3">20 vol</span>
+      <span class="scrap s4">35 min??</span>
+      <span class="scrap s5">1:1 or 1:1.5</span>
+    </div>
+    <div class="bowl"><span class="bloom"></span></div>
+    <p class="said">&ldquo;Lena's last formula&rdquo;</p>
+    <div class="hero-card">
+      <p class="hc-name">Lena Okafor <small>Demo data</small></p>
+      <p class="hc-row"><span>5N</span><b>40 g</b></p>
+      <p class="hc-row"><span>6.3</span><b>10 g</b></p>
+      <p class="hc-row dev"><span>Developer 20 vol, 1 to 1</span><b>50 g</b></p>
+      <p class="hc-total"><span>Total in the bowl</span><b><i data-count="100">100</i> g</b></p>
+    </div>
+  </div>
+</section>
+
+<section class="marquee" aria-label="Things you can say">
+  <div class="marquee-track">
+    <span>&ldquo;Lena's last formula&rdquo;</span><span>&ldquo;Make it one and a half times&rdquo;</span><span>&ldquo;Colour Marta: 30 grams 6N and 20 grams 7.1, 20 volume, one to one and a half&rdquo;</span><span>&ldquo;Priya's last formula&rdquo;</span><span>&ldquo;Make it 150 grams in total&rdquo;</span><span>&ldquo;Go for twice the amount&rdquo;</span>
+    <span aria-hidden="true">&ldquo;Lena's last formula&rdquo;</span><span aria-hidden="true">&ldquo;Make it one and a half times&rdquo;</span><span aria-hidden="true">&ldquo;Colour Marta: 30 grams 6N and 20 grams 7.1, 20 volume, one to one and a half&rdquo;</span><span aria-hidden="true">&ldquo;Priya's last formula&rdquo;</span><span aria-hidden="true">&ldquo;Make it 150 grams in total&rdquo;</span><span aria-hidden="true">&ldquo;Go for twice the amount&rdquo;</span>
+  </div>
+</section>
+
+<section class="compare" aria-labelledby="compare-h">
+  <h2 id="compare-h" data-split>From a drawer of cards to one sentence.</h2>
+  <div class="compare-box" data-rise>
+    <div class="pane before">
+      <h3>Before</h3>
+      <p>A card in a drawer, a note on a phone, or memory. Typed later, with colour on the gloves. A colourist leaves and the formulas leave too.</p>
+    </div>
+    <div class="pane after" style="--cut: 50%">
+      <h3>With Formula Book</h3>
+      <p>Said at the bowl, saved to the client on the salon's server, read back next visit and scaled to today's bowl.</p>
+    </div>
+    <label class="cut"><span class="sr">Compare before and after</span><input type="range" min="0" max="100" value="50" aria-label="Compare before and after"></label>
+  </div>
+</section>
+
+<section class="story" id="how" aria-labelledby="how-h">
+  <div class="story-inner">
+    <div class="story-text">
+      <h2 id="how-h" data-split>How it works</h2>
+      <ol class="steps">
+        <li class="step"><h3>Say it</h3><p>Mic or keyboard. The words go to a chooser that picks one of the server's tools.</p></li>
+        <li class="step"><h3>The server does the maths</h3><p>An MCP server, spec 2025-11-25 over Streamable HTTP. Grams, developer, totals and scaling live on the server, not in the chat.</p></li>
+        <li class="step"><h3>It asks, never guesses</h3><p>Two clients called Priya? The server asks which one through MCP elicitation. An unknown client gets a refusal and the next step.</p></li>
+        <li class="step"><h3>One result, three surfaces</h3><p>An MCP Apps card on a screen, the same card on a phone, one spoken sentence on a speaker.</p></li>
+      </ol>
+    </div>
+    <div class="story-stage" aria-hidden="true">
+      <div class="frame f1"><p class="bubble">&ldquo;Make it one and a half times&rdquo;</p></div>
+      <div class="frame f2"><code>tools/call scale_formula<br>{ client: "Lena Okafor", factor: 1.5 }<br>&rarr; total 150 g</code></div>
+      <div class="frame f3"><p class="bubble ask">Which Priya?</p><p class="choices"><span>Priya Shah</span><span>Priya Kapoor</span></p></div>
+      <div class="frame f4"><span class="device d-screen"></span><span class="device d-phone"></span><span class="device d-speaker"></span></div>
+      <div class="story-line"><span></span></div>
+    </div>
+  </div>
+</section>
+
+<section class="bento" aria-labelledby="bento-h">
+  <h2 id="bento-h" data-split>Built for the bowl.</h2>
+  <div class="grid">
+    <article class="tile t-wave" data-rise><h3>Voice in, voice out</h3><p>Speak the formula; hear one sentence with every number.</p><div class="wave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></article>
+    <article class="tile t-scale" data-rise><h3>Scales to today's bowl</h3><p>By a factor or to a total weight.</p><div class="readout"><span>100 g</span><span>150 g</span><span>200 g</span></div></article>
+    <article class="tile t-ask" data-rise><h3>Asks, never guesses</h3><p>Same name? It asks which client.</p><div class="pick"><span>Shah</span><span>Kapoor</span></div></article>
+    <article class="tile t-mcp" data-rise><h3>Real MCP traffic</h3><p>Every JSON-RPC message is visible in the demo.</p><div class="rpc"><code>initialize</code><code>tools/list</code><code>resources/read</code><code>tools/call</code></div></article>
+    <article class="tile t-plan" data-rise><h3>Free for 50 formulas</h3><p>The server enforces the limit. Paid plan price: a hypothesis, payments not live.</p><div class="meter"><span></span></div></article>
+  </div>
+</section>
+
+<section class="toy" id="try" aria-labelledby="toy-h">
+  <h2 id="toy-h" data-split>Try the maths.</h2>
+  <p data-rise>Lena's last formula, scaled the way the server does it. Drag to change today's bowl.</p>
+  <div class="toy-box" data-rise>
+    <p class="toy-head"><label for="factor">Scale</label> <output id="factor-out" for="factor">x1.5</output></p>
+    <input id="factor" type="range" min="0.5" max="2.5" step="0.1" value="1.5">
+    <dl class="toy-rows">
+      <div><dt>5N</dt><dd id="r-5n">60 g</dd></div>
+      <div><dt>6.3</dt><dd id="r-63">15 g</dd></div>
+      <div class="dev"><dt>Developer 20 vol, 1 to 1</dt><dd id="r-dev">75 g</dd></div>
+      <div class="total"><dt>Total in the bowl</dt><dd id="r-total">150 g</dd></div>
+    </dl>
+    <p class="spoken" id="r-said">&ldquo;Lena Okafor: 60 grams 5N, 15 grams 6.3, with 75 grams of 20 volume developer. Total 150 grams.&rdquo;</p>
+  </div>
+</section>
+
+<section class="stats" aria-label="The build, in numbers from the repository">
+  <div data-rise><b data-count="3">3</b><span>MCP tools</span></div>
+  <div data-rise><b data-count="50">50</b><span>free formulas per salon</span></div>
+  <div data-rise><b data-count="10">10</b><span>golden-path steps tested in Chrome</span></div>
+  <div data-rise><b data-count="143">143</b><span>unit and server tests</span></div>
+</section>
+
+<section class="faq" id="faq" aria-labelledby="faq-h">
+  <h2 id="faq-h" data-split>Questions</h2>
+  <details data-rise><summary>Does this run on Alexa today?</summary><p>No. The demo uses a simulated Alexa+ client in the repository, labelled on screen. The MCP server is real. Alexa+ add-on tools are partner-only, so it has not been tested on a real device.</p></details>
+  <details data-rise><summary>Do I need a smart scale?</summary><p>No. You say the grams from any scale you already use.</p></details>
+  <details data-rise><summary>What if it mishears a name?</summary><p>It never guesses. An unknown client gets a refusal and the next step; two matching clients get a question.</p></details>
+  <details data-rise><summary>What does it cost?</summary><p>Free for the first 50 formulas per salon. The paid plan price is a hypothesis and payments are not live.</p></details>
+  <details data-rise><summary>Is it open source?</summary><p>Yes, MIT licence. Run it locally with two commands.</p></details>
+</section>
+
+<section class="cta" aria-labelledby="cta-h">
+  <h2 id="cta-h" data-split>Your next bowl, already measured.</h2>
+  <a class="btn btn-big" href="https://github.com/let-the-dreamers-rise/formula-book#run-it">Run Formula Book</a>
+</section>
+</main>
+
+<footer class="foot">
+  <svg class="swirl" viewBox="0 0 600 40" aria-hidden="true"><path d="M0 20 C 100 0, 200 40, 300 20 S 500 0, 600 20" /></svg>
+  <p>Formula Book. MIT licence. Built for the Amazon Developer Hackathon 2026, Alexa+ track.</p>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="main.js"></script>
+</body>
+</html>

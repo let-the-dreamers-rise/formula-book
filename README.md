@@ -84,7 +84,7 @@ npm install
 npm run dev:all
 ```
 
-Open http://localhost:3000/sim. Try "Lena's last formula", then "Make it one and a half times", then "Colour Marta: 30 grams 6N and 20 grams 7.1, 20 volume, one to one and a half".
+Open http://localhost:3000/sim for the simulated Alexa+ demo, or http://localhost:3000/site/index.html for the product site (static HTML, CSS and GSAP in `apps/web/public/site`). Try "Lena's last formula", then "Make it one and a half times", then "Colour Marta: 30 grams 6N and 20 grams 7.1, 20 volume, one to one and a half".
 
 The MCP endpoint is `http://127.0.0.1:8787/mcp`. Two public demo tokens guard demo data only: `demo-salon-token` and `booth12-token` (send `Authorization: Bearer <token>`). Set `SALON_TOKENS` for your own.
 
