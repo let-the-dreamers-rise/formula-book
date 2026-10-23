@@ -194,6 +194,31 @@ await beat("claude", async () => {
   await moveTo(testId("chooser-badge"));
 });
 
+/** Waits until the assistant has stopped adding replies for a moment (Claude's loop has finished). */
+async function settle(quietMs = 2500, maxMs = 30_000) {
+  const replies = testId("turn-assistant");
+  const end = Date.now() + maxMs;
+  let count = await replies.count();
+  let quietSince = Date.now();
+  while (Date.now() < end && Date.now() - quietSince < quietMs) {
+    await sleep(300);
+    const now = await replies.count();
+    if (now !== count) {
+      count = now;
+      quietSince = Date.now();
+    }
+  }
+}
+
+await beat("orchestrate", async () => {
+  await moveTo(testId("diary-status"));
+  await sleep(1200);
+  await say("Who's booked in today? Get their bowls ready");
+  await page.locator('[data-testid="traffic-row"]', { hasText: "list_appointments" }).first().waitFor({ timeout: 30_000 });
+  await settle();
+  await moveTo(page.getByText("MCP traffic").first());
+});
+
 await showCard("prior");
 await beat("prior", async () => {});
 await hideCard();
